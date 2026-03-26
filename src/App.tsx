@@ -32,7 +32,7 @@ import {
 
 // Initialize Gemini
 const getAI = () => {
-  const apiKey = (import.meta.env?.VITE_GEMINI_API_KEY) || "";
+  const apiKey = process.env.GEMINI_API_KEY || "";
   return new GoogleGenAI({ apiKey });
 };
 
@@ -217,12 +217,12 @@ function ValentinaApp() {
   const initChat = async () => {
     if (!chatRef.current && !isInitializing) {
       setIsInitializing(true);
-      const apiKey = import.meta.env?.VITE_GEMINI_API_KEY;
+      const apiKey = process.env.GEMINI_API_KEY;
       
       console.log("Initializing chat. API Key present:", !!apiKey);
       
       if (!apiKey) {
-        console.error("VITE_GEMINI_API_KEY is missing. Chat will not function.");
+        console.error("GEMINI_API_KEY is missing. Chat will not function.");
         setIsInitializing(false);
         return;
       }
