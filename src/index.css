@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", serif;
+}
+
+:root {
+  --bg: #000000;
+  --card: #121212;
+  --of-blue: #00aff0;
+  --of-blue-hover: #008fcc;
+  --text-primary: #ffffff;
+  --text-secondary: #8a96a3;
+  --border: #242529;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+.of-button-primary {
+  background-color: var(--of-blue);
+  color: white;
+  font-weight: 600;
+  border-radius: 9999px;
+  padding: 10px 20px;
+  transition: background-color 0.2s;
+}
+
+.of-button-primary:hover {
+  background-color: var(--of-blue-hover);
+}
+
+.of-button-outline {
+  border: 1px solid var(--of-blue);
+  color: var(--of-blue);
+  font-weight: 600;
+  border-radius: 9999px;
+  padding: 10px 20px;
+  transition: all 0.2s;
+}
+
+.of-button-outline:hover {
+  background-color: rgba(0, 175, 240, 0.1);
+}
+
+.of-card {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0;
+}
+
+.of-input {
+  background-color: #1a1a1a;
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  color: white;
+  padding: 12px 20px;
+}
+
+.of-input:focus {
+  border-color: var(--of-blue);
+  outline: none;
+}
+
+.glass {
+  background: rgba(18, 18, 18, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.user-bubble {
+  background-color: var(--of-blue);
+  color: white;
+  border-radius: 18px 18px 4px 18px;
+}
+
+.valentina-bubble {
+  background-color: #242529;
+  color: white;
+  border-radius: 18px 18px 18px 4px;
+}
+
+/* Hide scrollbar but keep functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.floating {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
