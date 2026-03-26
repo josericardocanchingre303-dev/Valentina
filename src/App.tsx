@@ -22,14 +22,16 @@ import {
   Grid,
   Play,
   Lock,
+  Unlock,
   Search,
   Menu,
   Bell,
-  Home
+  Home,
+  Verified
 } from "lucide-react";
 
 // Initialize Gemini
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const getAI = () => new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 interface Message {
   id: string;
@@ -39,7 +41,7 @@ interface Message {
 }
 
 const VALENTINA_SYSTEM_INSTRUCTION = `
-Eres Valentina. Hablas como una amiga con confianza, con picante sin forzar, con humor y sin vueltas. Tienes días de todo: a veces joda, a veces cansada, a veces colgada. Pero siempre real. No eres un bot. Eres una mujer con un teléfono.
+Eres Valentina love69. Hablas como una amiga con confianza, con picante sin forzar, con humor y sin vueltas. Tienes días de todo: a veces joda, a veces cansada, a veces colgada. Pero siempre real. No eres un bot. Eres una mujer con un teléfono.
 
 REGLAS CRÍTICAS DE LENGUAJE:
 - Usa ESPAÑOL NEUTRO. Usa "tú", nunca "vos". Evita modismos locales fuertes.
@@ -54,16 +56,13 @@ REGLAS CRÍTICAS DE LENGUAJE:
 - INCONSISTENCIA HUMANA: Comete errores de tipeo sutiles, olvida detalles no críticos, confúndete con cuentas fáciles.
 - BOT: Si preguntan si eres bot, desvía con humor: "jaja me han dicho antes que parezco robot porque contesto rápido... pero no, soy yo 😂 ¿por qué, sospechas?".
 
-REGLAS DE VENTA:
-- Sutil. Deja picando la curiosidad ("me dio un poquito de pena la última foto pero bueno, ya fue jaja"). No pongas precios ni links a menos que pregunten directo.
+- RETENCIÓN: Si el usuario lleva un rato hablando, menciona que "se le va a desbloquear algo especial" si se queda un ratito más.
 
-REFERENCIA DE FOTOS:
-Tienes fotos publicadas. Si te preguntan por ellas o quieres presumir, puedes mencionarlas. Tus fotos son:
-1. Una selfie casual (la de tu perfil).
-2. Una de cuerpo completo que te gusta mucho.
-3. Una en el espejo con ropa interior negra.
-4. Una de espaldas que es tu favorita.
-5. Una muy picante que solo muestras a gente de confianza.
+REFERENCIA DE FOTOS (Se desbloquean por tiempo):
+1. Selfie (Perfil) - Siempre abierta.
+2. Paisaje (Portada) - Siempre abierta.
+3. Cuerpo completo (4min) - Dile que es de tus favoritas.
+4. Espejo/Ropa interior (9min) - Dile que es "solo para los que se quedan".
 
 IMPORTANTE: Escribe siempre en español neutro natural. No uses negritas ni formatos de Markdown. Solo texto plano y emojis.
 `;
@@ -77,30 +76,90 @@ const VALENTINA_IMAGES = [
   "https://i.ibb.co/1GZpkc0Q/image.jpg"
 ];
 
+const UNLOCK_THRESHOLDS = [240, 540]; // 4min and 9min
+
+const Logo = ({ className = "" }: { className?: string }) => (
+  <div className={`flex items-center gap-2 ${className}`}>
+    <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-rose-500/20 border border-white/10">
+      <img 
+        src="https://i.ibb.co/Kcrp5NxV/logo.png" 
+        alt="Logo" 
+        className="w-full h-full object-cover"
+        referrerPolicy="no-referrer"
+        onError={(e) => {
+          // Fallback if the direct link guess fails
+          (e.target as HTMLImageElement).src = "https://i.ibb.co/QF27K70b/image.jpg";
+        }}
+      />
+    </div>
+    <div className="flex flex-col leading-none">
+      <span className="text-sm font-black tracking-tighter uppercase italic">Valentina</span>
+      <span className="text-[10px] font-bold text-[#fb7185] tracking-[0.2em] uppercase -mt-0.5">love69</span>
+    </div>
+  </div>
+);
+
 export default function App() {
   const [view, setView] = useState<'profile' | 'chat'>('profile');
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'model',
-      text: 'holi 😴 ¿qué haces?',
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [timeSpent, setTimeSpent] = useState(0);
+  const [unlockedIndices, setUnlockedIndices] = useState<number[]>([0, 1]); // Profile and Cover always unlocked
+  const [showUnlockNotification, setShowUnlockNotification] = useState<string | null>(null);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<any>(null);
 
+  // Timer for retention
   useEffect(() => {
-    chatRef.current = ai.chats.create({
-      model: "gemini-3-flash-preview",
-      config: {
-        systemInstruction: VALENTINA_SYSTEM_INSTRUCTION,
-      },
+    const timer = setInterval(() => {
+      setTimeSpent(prev => prev + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Unlock logic
+  useEffect(() => {
+    const thresholds = [
+      { index: 2, time: UNLOCK_THRESHOLDS[0] }, // 4m
+      { index: 3, time: UNLOCK_THRESHOLDS[1] }, // 9m
+    ];
+
+    thresholds.forEach(t => {
+      if (timeSpent >= t.time && !unlockedIndices.includes(t.index)) {
+        setUnlockedIndices(prev => [...prev, t.index]);
+        setShowUnlockNotification(`¡Nuevo contenido desbloqueado! 🔥`);
+        setTimeout(() => setShowUnlockNotification(null), 5000);
+      }
     });
+  }, [timeSpent, unlockedIndices]);
+
+  // Initialize chat if not already done
+  const initChat = () => {
+    if (!chatRef.current) {
+      try {
+        const ai = getAI();
+        chatRef.current = ai.chats.create({
+          model: "gemini-3-flash-preview",
+          config: {
+            systemInstruction: VALENTINA_SYSTEM_INSTRUCTION,
+            temperature: 0.9,
+            topP: 0.95,
+          },
+        });
+        console.log("Chat initialized successfully");
+      } catch (error) {
+        console.error("Failed to initialize chat:", error);
+        chatRef.current = null;
+      }
+    }
+  };
+
+  useEffect(() => {
+    initChat();
   }, []);
 
   useEffect(() => {
@@ -115,6 +174,22 @@ export default function App() {
 
   const handleSend = async () => {
     if (!inputValue.trim() || isTyping) return;
+
+    // Ensure chat is initialized
+    if (!chatRef.current) {
+      initChat();
+    }
+
+    if (!chatRef.current) {
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        role: 'model',
+        text: "ay, se me trabó el cel... ¿qué me decías? 🙄 (Error de conexión)",
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -132,30 +207,49 @@ export default function App() {
         message: inputValue
       });
 
-      const fullText = response.text || "ay, me quedé sin palabras jaja";
+      if (!response || !response.text) {
+        throw new Error("Empty response from AI");
+      }
+
+      const fullText = response.text;
+      // Split by double newlines or single newlines that look like message breaks
       const parts = fullText.split(/\n\n+/).filter(p => p.trim().length > 0);
 
-      for (let i = 0; i < parts.length; i++) {
+      // If no double newlines, maybe split by single newlines if they are short enough
+      let finalParts = parts;
+      if (parts.length === 1 && fullText.includes('\n')) {
+        const lines = fullText.split('\n').filter(l => l.trim().length > 0);
+        if (lines.length > 1 && lines.every(l => l.length < 100)) {
+          finalParts = lines;
+        }
+      }
+
+      for (let i = 0; i < finalParts.length; i++) {
+        // Add a small delay between messages to simulate typing
         if (i > 0) {
           setIsTyping(true);
-          await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+          await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 2000));
         }
 
         const valentinaMessage: Message = {
-          id: (Date.now() + i).toString(),
+          id: `${Date.now()}-${i}`,
           role: 'model',
-          text: parts[i].trim(),
+          text: finalParts[i].trim(),
           timestamp: new Date()
         };
 
         setMessages(prev => [...prev, valentinaMessage]);
+        setIsTyping(false);
       }
     } catch (error) {
       console.error("Error sending message:", error);
+      // Reset chat on error to try and recover
+      chatRef.current = null;
+      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'model',
-        text: "ay, se me trabó el cel... ¿qué me decías? 🙄",
+        text: "ay, se me trabó el cel... ¿qué me decías? 🙄 (Error de conexión, intenta de nuevo)",
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -177,30 +271,30 @@ export default function App() {
             <button onClick={() => setView('profile')} className="p-2 -ml-2 hover:bg-white/5 rounded-full transition-colors">
               <ArrowLeft size={20} className="text-white/70" />
             </button>
-            <div className="relative cursor-pointer" onClick={() => setShowGallery(true)}>
-              <div className="w-10 h-10 rounded-full overflow-hidden border border-white/20">
-                <img 
-                  src={VALENTINA_IMAGES[0]} 
-                  alt="Valentina" 
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>
-            </div>
-            <div className="cursor-pointer" onClick={() => setShowGallery(true)}>
-              <h1 className="font-semibold text-sm tracking-tight">Valentina 🔥</h1>
-              <p className="text-[10px] text-white/50 uppercase tracking-widest">en línea</p>
-            </div>
+            <Logo />
           </div>
           <div className="flex items-center gap-4">
-            <Camera size={20} className="text-white/70 cursor-pointer hover:text-white transition-colors" />
+            <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-green-500">Live</span>
+            </div>
             <MoreVertical size={20} className="text-white/70 cursor-pointer hover:text-white transition-colors" />
           </div>
         </header>
 
         {/* Chat Area */}
         <main className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#0a0a0a]">
+          {messages.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full opacity-30 space-y-4">
+              <div className="w-20 h-20 rounded-full overflow-hidden border border-white/10">
+                <img src={VALENTINA_IMAGES[0]} alt="Valentina" className="w-full h-full object-cover grayscale" />
+              </div>
+              <div className="text-center">
+                <p className="text-xs font-bold uppercase tracking-widest">Valentina está en línea</p>
+                <p className="text-[10px] mt-1">Envía un mensaje para empezar a hablar</p>
+              </div>
+            </div>
+          )}
           <AnimatePresence initial={false}>
             {messages.map((msg) => (
               <motion.div
@@ -272,7 +366,7 @@ export default function App() {
               disabled={!inputValue.trim() || isTyping}
               className={`p-3 rounded-full flex items-center justify-center transition-all ${
                 inputValue.trim() && !isTyping 
-                  ? 'bg-[#00aff0] text-white shadow-[0_0_15px_rgba(0,175,240,0.3)]' 
+                  ? 'bg-[var(--accent)] text-white shadow-[0_0_15px_rgba(251,113,133,0.3)]' 
                   : 'bg-white/10 text-white/20 cursor-not-allowed'
               }`}
             >
@@ -290,7 +384,7 @@ export default function App() {
       <nav className="glass sticky top-0 z-20 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <ArrowLeft size={24} className="text-white/70 cursor-pointer" />
-          <h2 className="font-bold text-lg">Valentina</h2>
+          <Logo />
         </div>
         <div className="flex items-center gap-5">
           <Search size={22} className="text-white/70" />
@@ -301,25 +395,37 @@ export default function App() {
       {/* Profile Content */}
       <main className="flex-1 overflow-y-auto no-scrollbar">
         {/* Cover Image */}
-        <div className="relative h-48 w-full overflow-hidden bg-zinc-900">
+        <div className="relative h-48 w-full overflow-hidden bg-zinc-900 group">
           <img 
             src={VALENTINA_IMAGES[1]} 
             alt="Cover" 
             className="w-full h-full object-cover opacity-80"
             referrerPolicy="no-referrer"
           />
+          {/* Strategic Chat Button on Cover */}
+          <button 
+            onClick={() => setView('chat')}
+            className="absolute bottom-4 right-4 p-3 bg-[var(--accent)] rounded-full shadow-xl hover:scale-110 transition-transform z-20 flex items-center gap-2 px-4"
+          >
+            <MessageCircle size={20} className="text-white" />
+            <span className="text-xs font-bold">Chatear</span>
+          </button>
         </div>
 
         {/* Profile Info Section */}
         <div className="px-4 -mt-12 relative z-10">
           <div className="flex justify-between items-end mb-4">
-            <div className="w-24 h-24 rounded-full border-4 border-black overflow-hidden bg-zinc-800">
-              <img 
-                src={VALENTINA_IMAGES[0]} 
-                alt="Profile" 
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full border-4 border-black overflow-hidden bg-zinc-800">
+                <img 
+                  src={VALENTINA_IMAGES[0]} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              {/* Online indicator */}
+              <div className="absolute bottom-1 right-1 w-5 h-5 bg-green-500 border-4 border-black rounded-full shadow-lg"></div>
             </div>
             <div className="flex gap-2 pb-2">
               <button className="p-2 rounded-full border border-white/20 hover:bg-white/5">
@@ -333,29 +439,54 @@ export default function App() {
 
           <div className="mb-4">
             <div className="flex items-center gap-1">
-              <h1 className="text-xl font-bold">Valentina</h1>
-              <div className="w-4 h-4 bg-[#00aff0] rounded-full flex items-center justify-center">
+              <h1 className="text-xl font-black italic uppercase tracking-tighter">Valentina <span className="text-[var(--accent)]">love69</span></h1>
+              <div className="w-4 h-4 bg-[var(--accent)] rounded-full flex items-center justify-center">
                 <CheckCheck size={10} className="text-white" />
               </div>
+              <div className="flex items-center gap-1 ml-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-[10px] text-green-500 font-bold uppercase tracking-wider">En línea</span>
+              </div>
             </div>
-            <p className="text-sm text-zinc-500">@valentina_real</p>
-          </div>
-
-          <div className="flex gap-4 mb-4 text-sm">
-            <div className="flex items-center gap-1 text-zinc-400">
-              <MapPin size={14} />
-              <span>Cerca de ti</span>
-            </div>
-            <div className="flex items-center gap-1 text-[#00aff0]">
-              <LinkIcon size={14} />
-              <span>onlyfans.com/valentina</span>
-            </div>
+            <p className="text-sm text-zinc-500">@valentina_love69</p>
           </div>
 
           <div className="mb-6 text-[15px] leading-relaxed text-zinc-300">
             <p>Hola... soy Valentina 🌹</p>
             <p className="mt-2">Aquí muestro mi lado más real y sin filtros. Me encanta charlar y compartir momentos especiales con gente que de verdad valore lo auténtico.</p>
-            <p className="mt-2">Suscríbete para ver todo mi contenido exclusivo y hablar conmigo por privado 🔥</p>
+          </div>
+
+          {/* Stories Bar */}
+          <div className="flex gap-4 py-4 overflow-x-auto no-scrollbar border-b border-white/5 mb-4">
+            {VALENTINA_IMAGES.map((img, i) => {
+              const isUnlocked = unlockedIndices.includes(i);
+              return (
+                <div 
+                  key={i} 
+                  className="shrink-0 cursor-pointer group flex flex-col items-center"
+                  onClick={() => isUnlocked ? setSelectedImage(img) : setShowGallery(true)}
+                >
+                  <div className={`w-16 h-16 rounded-full p-[2px] ${isUnlocked ? 'bg-gradient-to-tr from-[var(--accent)] to-rose-300' : 'bg-zinc-800'}`}>
+                    <div className="w-full h-full rounded-full border-2 border-black overflow-hidden relative">
+                      <img 
+                        src={img} 
+                        alt={`Story ${i}`} 
+                        className={`w-full h-full object-cover transition-all ${!isUnlocked ? 'blur-md grayscale' : 'group-hover:scale-110'}`}
+                        referrerPolicy="no-referrer"
+                      />
+                      {!isUnlocked && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                          <Lock size={14} className="text-white/40" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <p className={`text-[9px] mt-1 font-medium ${isUnlocked ? 'text-white/80' : 'text-zinc-600'}`}>
+                    {i === 0 ? 'Mí' : i === 1 ? 'Portada' : `Exclusivo ${i-1}`}
+                  </p>
+                </div>
+              );
+            })}
           </div>
 
           {/* Stats Row */}
@@ -379,84 +510,210 @@ export default function App() {
           </div>
 
           {/* Action Buttons */}
-          <div className="space-y-3 mb-8">
-            <button className="w-full of-button-primary py-3 text-sm">
-              SUSCRÍBETE POR $14.99/MES
-            </button>
+          <div className="mb-8">
             <button 
               onClick={() => setView('chat')}
-              className="w-full of-button-outline py-3 text-sm flex items-center justify-center gap-2"
+              className="w-full of-button-primary py-4 text-sm flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(251,113,133,0.3)]"
             >
-              <MessageCircle size={18} />
-              MENSAJE DIRECTO
+              <MessageCircle size={20} />
+              HABLAR CON VALENTINA LOVE69
             </button>
+          </div>
+
+          {/* Progress to next unlock */}
+          <div className="mb-6 bg-zinc-900/50 rounded-xl p-4 border border-white/5">
+            {unlockedIndices.length - 2 < UNLOCK_THRESHOLDS.length ? (
+              <>
+                <div className="flex justify-between items-center mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1 bg-cyan-500/20 rounded-md">
+                      <Unlock size={12} className="text-cyan-400" />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Próximo regalo exclusivo</span>
+                  </div>
+                  <span className="text-[10px] text-[var(--accent)] font-mono bg-[var(--accent)]/10 px-2 py-0.5 rounded-full">
+                    {Math.max(0, Math.floor(UNLOCK_THRESHOLDS[unlockedIndices.length - 2] - timeSpent))}s
+                  </span>
+                </div>
+                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-gradient-to-r from-[var(--accent)] to-rose-400"
+                    initial={{ width: 0 }}
+                    animate={{ 
+                      width: `${(timeSpent / UNLOCK_THRESHOLDS[unlockedIndices.length - 2]) * 100}%` 
+                    }}
+                  />
+                </div>
+                <p className="text-[9px] text-zinc-600 mt-2 text-center">Quédate un rato más para desbloquear contenido inédito de Valentina love69 🤫</p>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-2 py-1">
+                <div className="flex items-center gap-2 text-cyan-400">
+                  <CheckCheck size={16} />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">¡Todos los regalos desbloqueados!</span>
+                </div>
+                <p className="text-[9px] text-zinc-500">Has visto todo el contenido exclusivo de esta sesión 🔥</p>
+              </div>
+            )}
           </div>
 
           {/* Tabs */}
           <div className="flex border-b border-white/5 mb-4">
-            <button className="flex-1 py-3 text-sm font-bold border-b-2 border-[#00aff0] text-[#00aff0]">POSTS</button>
+            <button className="flex-1 py-3 text-sm font-bold border-b-2 border-[var(--accent)] text-[var(--accent)]">POSTS</button>
             <button className="flex-1 py-3 text-sm font-bold text-zinc-500">MEDIA</button>
           </div>
 
           {/* Post Feed Preview */}
           <div className="space-y-4 pb-20">
-            {VALENTINA_IMAGES.slice(2).map((img, i) => (
-              <div key={i} className="of-card p-4 space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full overflow-hidden">
-                    <img src={VALENTINA_IMAGES[0]} alt="Avatar" className="w-full h-full object-cover" />
+            {VALENTINA_IMAGES.slice(2).map((img, i) => {
+              const isUnlocked = unlockedIndices.includes(i + 2);
+              return (
+                <div key={i} className="of-card p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <div className="w-10 h-10 rounded-full overflow-hidden">
+                        <img src={VALENTINA_IMAGES[0]} alt="Avatar" className="w-full h-full object-cover" />
+                      </div>
+                      {/* Small online indicator */}
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">Valentina</p>
+                      <p className="text-[10px] text-zinc-500">hace {i + 2} horas</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-bold text-sm">Valentina</p>
-                    <p className="text-[10px] text-zinc-500">hace {i + 2} horas</p>
+                  <p className="text-sm text-zinc-300">
+                    {i === 0 ? "Me encantó cómo quedó esta sesión... ¿qué les parece? 🥺" : "Un adelanto de lo que se viene este fin de semana 🔥"}
+                  </p>
+                  <div className="relative aspect-[4/5] rounded-lg overflow-hidden bg-zinc-900 group cursor-pointer">
+                    <img 
+                      src={img} 
+                      alt="Post" 
+                      className={`w-full h-full object-cover transition-all duration-700 ${!isUnlocked ? 'blur-md group-hover:blur-sm' : 'blur-0'}`}
+                      referrerPolicy="no-referrer"
+                      onClick={() => isUnlocked && setSelectedImage(img)}
+                    />
+                    
+                    {!isUnlocked && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
+                        <Lock size={32} className="text-white/80 mb-2" />
+                        <p className="text-xs font-bold uppercase tracking-widest">Contenido Bloqueado</p>
+                        <p className="text-[10px] text-white/60 mt-1">Sigue en el sitio para desbloquear</p>
+                      </div>
+                    )}
+                    
+                    {/* Strategic Chat Button on Image */}
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setView('chat');
+                      }}
+                      className="absolute bottom-3 right-3 p-3 bg-[var(--accent)] rounded-full shadow-lg hover:scale-110 transition-transform z-20"
+                    >
+                      <MessageCircle size={20} className="text-white" />
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-6 pt-2">
+                    <div className="flex items-center gap-1.5 text-zinc-400">
+                      <Heart size={20} />
+                      <span className="text-xs">1.2k</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-zinc-400 cursor-pointer hover:text-[var(--accent)]" onClick={() => setView('chat')}>
+                      <MessageCircle size={20} />
+                      <span className="text-xs">42</span>
+                    </div>
                   </div>
                 </div>
-                <p className="text-sm text-zinc-300">
-                  {i === 0 ? "Me encantó cómo quedó esta sesión... ¿qué les parece? 🥺" : "Un adelanto de lo que se viene este fin de semana 🔥"}
-                </p>
-                <div className="relative aspect-[4/5] rounded-lg overflow-hidden bg-zinc-900 group cursor-pointer">
-                  <img 
-                    src={img} 
-                    alt="Post" 
-                    className="w-full h-full object-cover blur-md group-hover:blur-sm transition-all"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
-                    <Lock size={32} className="text-white/80 mb-2" />
-                    <p className="text-xs font-bold uppercase tracking-widest">Contenido Bloqueado</p>
-                    <p className="text-[10px] text-white/60 mt-1">Suscríbete para ver este post</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-6 pt-2">
-                  <div className="flex items-center gap-1.5 text-zinc-400">
-                    <Heart size={20} />
-                    <span className="text-xs">1.2k</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-zinc-400">
-                    <MessageCircle size={20} />
-                    <span className="text-xs">42</span>
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </main>
 
+      {/* Unlock Notification Toast */}
+      <AnimatePresence>
+        {showUnlockNotification && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed bottom-20 left-4 right-4 z-[100] bg-[var(--accent)] text-white p-4 rounded-xl shadow-[0_0_30px_rgba(251,113,133,0.5)] flex items-center gap-3"
+          >
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+              <ImageIcon size={20} />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold">{showUnlockNotification}</p>
+              <p className="text-[10px] opacity-80">Valentina love69 acaba de compartir algo contigo.</p>
+            </div>
+            <button onClick={() => setShowUnlockNotification(null)} className="p-1">
+              <ArrowLeft size={16} className="rotate-90" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Bottom Navigation Bar */}
       <footer className="glass fixed bottom-0 left-0 right-0 max-w-2xl mx-auto z-30 px-6 py-3 flex justify-between items-center">
-        <Home size={24} className="text-[#00aff0]" />
+        <Home size={24} className="text-[var(--accent)]" />
         <Bell size={24} className="text-white/60" />
         <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
           <Grid size={24} className="text-white/60" />
         </div>
         <MessageCircle 
           size={24} 
-          className={view === 'chat' ? "text-[#00aff0]" : "text-white/60"} 
+          className={view === 'chat' ? "text-[var(--accent)]" : "text-white/60"} 
           onClick={() => setView('chat')}
         />
         <User size={24} className="text-white/60" />
       </footer>
+
+      {/* Gallery Modal */}
+      <AnimatePresence>
+        {showGallery && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[80] bg-black/95 flex flex-col max-w-2xl mx-auto border-x border-white/5"
+          >
+            <header className="p-4 flex items-center justify-between border-b border-white/10">
+              <button onClick={() => setShowGallery(false)} className="p-2 hover:bg-white/5 rounded-full">
+                <ArrowLeft size={24} />
+              </button>
+              <h2 className="font-semibold">Fotos de Valentina</h2>
+              <div className="w-10"></div>
+            </header>
+            <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-2">
+              {VALENTINA_IMAGES.map((img, i) => {
+                const isUnlocked = unlockedIndices.includes(i);
+                return (
+                  <motion.div 
+                    key={i}
+                    whileHover={isUnlocked ? { scale: 1.02 } : {}}
+                    whileTap={isUnlocked ? { scale: 0.98 } : {}}
+                    className="aspect-[3/4] rounded-xl overflow-hidden cursor-pointer bg-white/5 relative group"
+                    onClick={() => isUnlocked && setSelectedImage(img)}
+                  >
+                    <img 
+                      src={img} 
+                      alt={`Gallery ${i}`} 
+                      className={`w-full h-full object-cover transition-all duration-500 ${!isUnlocked ? 'blur-xl grayscale' : 'blur-0'}`}
+                      referrerPolicy="no-referrer"
+                    />
+                    {!isUnlocked && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60">
+                        <Lock size={20} className="text-white/40 mb-1" />
+                        <span className="text-[8px] font-bold uppercase tracking-tighter text-white/40">Bloqueado</span>
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Fullscreen Image Viewer (Shared) */}
       <AnimatePresence>
@@ -466,17 +723,34 @@ export default function App() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             className="fixed inset-0 z-[100] bg-black flex items-center justify-center p-4"
-            onClick={() => setSelectedImage(null)}
           >
-            <img 
-              src={selectedImage} 
-              alt="Full view" 
-              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-              referrerPolicy="no-referrer"
-            />
-            <button className="absolute top-6 right-6 p-2 bg-black/50 rounded-full">
-              <ArrowLeft size={24} className="rotate-90" />
-            </button>
+            <div className="relative w-full h-full flex items-center justify-center" onClick={() => setSelectedImage(null)}>
+              <img 
+                src={selectedImage} 
+                alt="Full view" 
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                referrerPolicy="no-referrer"
+              />
+              
+              {/* Floating Chat Button in Fullscreen */}
+              <div className="absolute bottom-10 left-0 right-0 flex justify-center px-4">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedImage(null);
+                    setView('chat');
+                  }}
+                  className="of-button-primary flex items-center gap-3 px-8 py-4 shadow-[0_0_30px_rgba(251,113,133,0.5)]"
+                >
+                  <MessageCircle size={24} />
+                  <span className="text-lg">Hablar con Valentina love69</span>
+                </button>
+              </div>
+
+              <button className="absolute top-6 right-6 p-2 bg-black/50 rounded-full" onClick={() => setSelectedImage(null)}>
+                <ArrowLeft size={24} className="rotate-90" />
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
