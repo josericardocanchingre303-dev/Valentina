@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Component, ReactNode } from 'react';
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -31,7 +31,10 @@ import {
 } from "lucide-react";
 
 // Initialize Gemini
-const getAI = () => new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const getAI = () => {
+  const apiKey = (import.meta.env?.VITE_GEMINI_API_KEY) || "";
+  return new GoogleGenAI({ apiKey });
+};
 
 interface Message {
   id: string;
@@ -80,9 +83,9 @@ const VALENTINA_IMAGES = [
 ];
 
 const VALENTINA_VIDEOS = [
+  "https://player.vimeo.com/video/1177493707", // Principal
   "https://player.vimeo.com/video/1177499992",
   "https://player.vimeo.com/video/1177496649",
-  "https://player.vimeo.com/video/1177493707",
   "https://player.vimeo.com/video/1177486626",
   "https://player.vimeo.com/video/1177488288"
 ];
@@ -110,7 +113,68 @@ const Logo = ({ className = "" }: { className?: string }) => (
   </div>
 );
 
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-20 h-20 bg-rose-500/20 rounded-full flex items-center justify-center mb-6">
+            <ArrowLeft size={40} className="text-rose-500" />
+          </div>
+          <h1 className="text-2xl font-bold mb-4">¡Ay, algo salió mal! 🙄</h1>
+          <p className="text-zinc-400 mb-8 max-w-md">
+            Parece que Valentina se quedó sin señal o algo se rompió. Intenta recargar la página.
+          </p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="of-button-primary px-8 py-3"
+          >
+            Recargar página
+          </button>
+          {import.meta.env.DEV && (
+            <pre className="mt-8 p-4 bg-zinc-900 rounded text-left text-xs overflow-auto max-w-full text-rose-400">
+              {this.state.error?.toString()}
+            </pre>
+          )}
+        </div>
+      );
+    }
+
+    return (this as any).props.children;
+  }
+}
+
 export default function App() {
+  return (
+    <ErrorBoundary>
+      <ValentinaApp />
+    </ErrorBoundary>
+  );
+}
+
+function ValentinaApp() {
+  const [showAgeVerification, setShowAgeVerification] = useState(true);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
   const [view, setView] = useState<'profile' | 'chat'>('profile');
   const [activeTab, setActiveTab] = useState<'posts' | 'media'>('posts');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -150,13 +214,16 @@ export default function App() {
   }, [timeSpent, unlockedIndices]);
 
   // Initialize chat if not already done
-  const initChat = () => {
-    if (!chatRef.current) {
-      const apiKey = process.env.GEMINI_API_KEY;
+  const initChat = async () => {
+    if (!chatRef.current && !isInitializing) {
+      setIsInitializing(true);
+      const apiKey = import.meta.env?.VITE_GEMINI_API_KEY;
+      
       console.log("Initializing chat. API Key present:", !!apiKey);
       
       if (!apiKey) {
-        console.error("GEMINI_API_KEY is missing. Chat will not function.");
+        console.error("VITE_GEMINI_API_KEY is missing. Chat will not function.");
+        setIsInitializing(false);
         return;
       }
 
@@ -174,12 +241,23 @@ export default function App() {
       } catch (error) {
         console.error("Failed to initialize chat:", error);
         chatRef.current = null;
+      } finally {
+        setIsInitializing(false);
       }
     }
   };
 
   useEffect(() => {
     initChat();
+    // Add welcome message if empty
+    if (messages.length === 0) {
+      setMessages([{
+        id: 'welcome',
+        role: 'model',
+        text: "¡Hola! Qué bueno verte por aquí... ¿cómo va tu día? 💋",
+        timestamp: new Date()
+      }]);
+    }
   }, []);
 
   useEffect(() => {
@@ -308,7 +386,13 @@ export default function App() {
 
         {/* Chat Area */}
         <main className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#0a0a0a]">
-          {messages.length === 0 && (
+          {isInitializing && messages.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full space-y-4">
+              <div className="w-12 h-12 border-4 border-[var(--accent)]/20 border-t-[var(--accent)] rounded-full animate-spin"></div>
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Conectando con Valentina...</p>
+            </div>
+          )}
+          {!isInitializing && messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full opacity-30 space-y-4">
               <div className="w-20 h-20 rounded-full overflow-hidden border border-white/10">
                 <img src={VALENTINA_IMAGES[0]} alt="Valentina" className="w-full h-full object-cover grayscale" />
@@ -404,6 +488,44 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-black text-white max-w-2xl mx-auto border-x border-white/5 flex flex-col relative">
+      <AnimatePresence>
+        {showAgeVerification && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6"
+          >
+            <div className="max-w-sm w-full text-center space-y-8">
+              <Logo className="justify-center scale-150 mb-12" />
+              <div className="space-y-4">
+                <h2 className="text-2xl font-black uppercase italic tracking-tighter">¿Eres mayor de edad?</h2>
+                <p className="text-zinc-400 text-sm leading-relaxed">
+                  Este sitio contiene contenido exclusivo de Valentina love69. Debes tener al menos 18 años para entrar.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={() => setShowAgeVerification(false)}
+                  className="of-button-primary py-4 text-sm tracking-widest"
+                >
+                  SÍ, TENGO +18 AÑOS
+                </button>
+                <button 
+                  onClick={() => window.location.href = "https://google.com"}
+                  className="text-zinc-500 text-xs hover:text-white transition-colors py-2"
+                >
+                  No, soy menor
+                </button>
+              </div>
+              <p className="text-[10px] text-zinc-600 uppercase tracking-widest">
+                Al entrar aceptas nuestros términos y condiciones
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Top Nav */}
       <nav className="glass sticky top-0 z-20 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -452,6 +574,23 @@ export default function App() {
               <div className="absolute bottom-1 right-1 w-5 h-5 bg-green-500 border-4 border-black rounded-full shadow-lg"></div>
             </div>
             <div className="flex gap-2 pb-2">
+              <button 
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: 'Valentina love69',
+                      text: '¡Mira el contenido exclusivo de Valentina love69! 🔥',
+                      url: window.location.href
+                    });
+                  } else {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert('¡Enlace copiado al portapapeles! 🔥');
+                  }
+                }}
+                className="p-2 rounded-full border border-white/20 hover:bg-white/5"
+              >
+                <LinkIcon size={20} />
+              </button>
               <button className="p-2 rounded-full border border-white/20 hover:bg-white/5">
                 <Heart size={20} />
               </button>
@@ -516,31 +655,37 @@ export default function App() {
           {/* Stats Row */}
           <div className="flex justify-between py-4 border-y border-white/5 mb-6">
             <div className="text-center flex-1">
-              <p className="font-bold">150</p>
+              <p className="font-bold">158</p>
               <p className="text-[10px] uppercase tracking-wider text-zinc-500">Posts</p>
             </div>
             <div className="text-center flex-1">
-              <p className="font-bold">2.4k</p>
+              <p className="font-bold">2.6k</p>
               <p className="text-[10px] uppercase tracking-wider text-zinc-500">Fotos</p>
             </div>
             <div className="text-center flex-1">
-              <p className="font-bold">92</p>
+              <p className="font-bold">98</p>
               <p className="text-[10px] uppercase tracking-wider text-zinc-500">Videos</p>
             </div>
             <div className="text-center flex-1">
-              <p className="font-bold">12k</p>
+              <p className="font-bold">14.2k</p>
               <p className="text-[10px] uppercase tracking-wider text-zinc-500">Likes</p>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="mb-8">
+          <div className="grid grid-cols-5 gap-2 mb-8">
             <button 
               onClick={() => setView('chat')}
-              className="w-full of-button-primary py-4 text-sm flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(251,113,133,0.3)]"
+              className="col-span-4 of-button-primary py-4 text-sm flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(251,113,133,0.3)]"
             >
               <MessageCircle size={20} />
               HABLAR CON VALENTINA LOVE69
+            </button>
+            <button 
+              onClick={() => setIsSubscribed(!isSubscribed)}
+              className={`col-span-1 flex items-center justify-center rounded-xl border transition-all ${isSubscribed ? 'bg-rose-500/10 border-rose-500 text-rose-500' : 'border-white/20 text-white/70 hover:bg-white/5'}`}
+            >
+              <Heart size={20} fill={isSubscribed ? "currentColor" : "none"} />
             </button>
           </div>
 
@@ -699,10 +844,10 @@ export default function App() {
                       <p className="text-sm text-zinc-300">
                         {descriptions[i % descriptions.length]}
                       </p>
-                      <div className={`relative aspect-[9/16] max-h-[600px] mx-auto rounded-lg overflow-hidden bg-black shadow-2xl ${isMain ? 'ring-2 ring-[var(--accent)]/50' : ''}`}>
+                      <div className={`relative aspect-[9/16] w-full max-w-[380px] mx-auto rounded-xl overflow-hidden bg-zinc-900 shadow-2xl ${isMain ? 'ring-2 ring-[var(--accent)]/50' : ''}`}>
                         <iframe
-                          src={`${videoUrl}?autoplay=0&title=0&byline=0&portrait=0`}
-                          className="absolute inset-0 w-full h-full"
+                          src={`${videoUrl}?autoplay=0&title=0&byline=0&portrait=0&badge=0&autopause=0&player_id=0&app_id=58479`}
+                          className="absolute inset-0 w-full h-full scale-[1.02]"
                           frameBorder="0"
                           allow="autoplay; fullscreen; picture-in-picture"
                           allowFullScreen
