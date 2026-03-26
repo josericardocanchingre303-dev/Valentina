@@ -64,6 +64,9 @@ REFERENCIA DE FOTOS (Se desbloquean por tiempo):
 3. Cuerpo completo (4min) - Dile que es de tus favoritas.
 4. Espejo/Ropa interior (9min) - Dile que es "solo para los que se quedan".
 
+VIDEOS:
+1. Video exclusivo (Vimeo) - Recién subido, menciónalo si te preguntan qué hay de nuevo.
+
 IMPORTANTE: Escribe siempre en español neutro natural. No uses negritas ni formatos de Markdown. Solo texto plano y emojis.
 `;
 
@@ -74,6 +77,10 @@ const VALENTINA_IMAGES = [
   "https://i.ibb.co/hF9nPCDC/image.jpg",
   "https://i.ibb.co/QvxLrXVG/image.jpg",
   "https://i.ibb.co/1GZpkc0Q/image.jpg"
+];
+
+const VALENTINA_VIDEOS = [
+  "https://player.vimeo.com/video/1177486626"
 ];
 
 const UNLOCK_THRESHOLDS = [240, 540]; // 4min and 9min
@@ -101,6 +108,7 @@ const Logo = ({ className = "" }: { className?: string }) => (
 
 export default function App() {
   const [view, setView] = useState<'profile' | 'chat'>('profile');
+  const [activeTab, setActiveTab] = useState<'posts' | 'media'>('posts');
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -504,7 +512,7 @@ export default function App() {
           {/* Stats Row */}
           <div className="flex justify-between py-4 border-y border-white/5 mb-6">
             <div className="text-center flex-1">
-              <p className="font-bold">142</p>
+              <p className="font-bold">143</p>
               <p className="text-[10px] uppercase tracking-wider text-zinc-500">Posts</p>
             </div>
             <div className="text-center flex-1">
@@ -512,7 +520,7 @@ export default function App() {
               <p className="text-[10px] uppercase tracking-wider text-zinc-500">Fotos</p>
             </div>
             <div className="text-center flex-1">
-              <p className="font-bold">84</p>
+              <p className="font-bold">85</p>
               <p className="text-[10px] uppercase tracking-wider text-zinc-500">Videos</p>
             </div>
             <div className="text-center flex-1">
@@ -571,73 +579,154 @@ export default function App() {
 
           {/* Tabs */}
           <div className="flex border-b border-white/5 mb-4">
-            <button className="flex-1 py-3 text-sm font-bold border-b-2 border-[var(--accent)] text-[var(--accent)]">POSTS</button>
-            <button className="flex-1 py-3 text-sm font-bold text-zinc-500">MEDIA</button>
+            <button 
+              onClick={() => setActiveTab('posts')}
+              className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'posts' ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-transparent text-zinc-500'}`}
+            >
+              POSTS
+            </button>
+            <button 
+              onClick={() => setActiveTab('media')}
+              className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors relative ${activeTab === 'media' ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-transparent text-zinc-500'}`}
+            >
+              MEDIA
+              <span className="absolute top-2 right-4 bg-rose-500 text-[8px] text-white px-1 rounded-full animate-pulse">NEW</span>
+            </button>
           </div>
 
-          {/* Post Feed Preview */}
+          {/* Feed Content */}
           <div className="space-y-4 pb-20">
-            {VALENTINA_IMAGES.slice(2).map((img, i) => {
-              const isUnlocked = unlockedIndices.includes(i + 2);
-              return (
-                <div key={i} className="of-card p-4 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="w-10 h-10 rounded-full overflow-hidden">
-                        <img src={VALENTINA_IMAGES[0]} alt="Avatar" className="w-full h-full object-cover" />
+            {activeTab === 'posts' ? (
+              VALENTINA_IMAGES.slice(2).map((img, i) => {
+                const isUnlocked = unlockedIndices.includes(i + 2);
+                return (
+                  <div key={i} className="of-card p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <div className="w-10 h-10 rounded-full overflow-hidden">
+                          <img src={VALENTINA_IMAGES[0]} alt="Avatar" className="w-full h-full object-cover" />
+                        </div>
+                        {/* Small online indicator */}
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>
                       </div>
-                      {/* Small online indicator */}
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm">Valentina</p>
-                      <p className="text-[10px] text-zinc-500">hace {i + 2} horas</p>
-                    </div>
-                  </div>
-                  <p className="text-sm text-zinc-300">
-                    {i === 0 ? "Me encantó cómo quedó esta sesión... ¿qué les parece? 🥺" : "Un adelanto de lo que se viene este fin de semana 🔥"}
-                  </p>
-                  <div className="relative aspect-[4/5] rounded-lg overflow-hidden bg-zinc-900 group cursor-pointer">
-                    <img 
-                      src={img} 
-                      alt="Post" 
-                      className={`w-full h-full object-cover transition-all duration-700 ${!isUnlocked ? 'blur-md group-hover:blur-sm' : 'blur-0'}`}
-                      referrerPolicy="no-referrer"
-                      onClick={() => isUnlocked && setSelectedImage(img)}
-                    />
-                    
-                    {!isUnlocked && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
-                        <Lock size={32} className="text-white/80 mb-2" />
-                        <p className="text-xs font-bold uppercase tracking-widest">Contenido Bloqueado</p>
-                        <p className="text-[10px] text-white/60 mt-1">Sigue en el sitio para desbloquear</p>
+                      <div>
+                        <p className="font-bold text-sm">Valentina</p>
+                        <p className="text-[10px] text-zinc-500">hace {i + 2} horas</p>
                       </div>
-                    )}
-                    
-                    {/* Strategic Chat Button on Image */}
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setView('chat');
-                      }}
-                      className="absolute bottom-3 right-3 p-3 bg-[var(--accent)] rounded-full shadow-lg hover:scale-110 transition-transform z-20"
-                    >
-                      <MessageCircle size={20} className="text-white" />
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-6 pt-2">
-                    <div className="flex items-center gap-1.5 text-zinc-400">
-                      <Heart size={20} />
-                      <span className="text-xs">1.2k</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-zinc-400 cursor-pointer hover:text-[var(--accent)]" onClick={() => setView('chat')}>
-                      <MessageCircle size={20} />
-                      <span className="text-xs">42</span>
+                    <p className="text-sm text-zinc-300">
+                      {i === 0 ? "Me encantó cómo quedó esta sesión... ¿qué les parece? 🥺" : "Un adelanto de lo que se viene este fin de semana 🔥"}
+                    </p>
+                    <div className="relative aspect-[4/5] rounded-lg overflow-hidden bg-zinc-900 group cursor-pointer">
+                      <img 
+                        src={img} 
+                        alt="Post" 
+                        className={`w-full h-full object-cover transition-all duration-700 ${!isUnlocked ? 'blur-md group-hover:blur-sm' : 'blur-0'}`}
+                        referrerPolicy="no-referrer"
+                        onClick={() => isUnlocked && setSelectedImage(img)}
+                      />
+                      
+                      {!isUnlocked && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
+                          <Lock size={32} className="text-white/80 mb-2" />
+                          <p className="text-xs font-bold uppercase tracking-widest">Contenido Bloqueado</p>
+                          <p className="text-[10px] text-white/60 mt-1">Sigue en el sitio para desbloquear</p>
+                        </div>
+                      )}
+                      
+                      {/* Strategic Chat Button on Image */}
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setView('chat');
+                        }}
+                        className="absolute bottom-3 right-3 p-3 bg-[var(--accent)] rounded-full shadow-lg hover:scale-110 transition-transform z-20"
+                      >
+                        <MessageCircle size={20} className="text-white" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-6 pt-2">
+                      <div className="flex items-center gap-1.5 text-zinc-400">
+                        <Heart size={20} />
+                        <span className="text-xs">{124 + i * 42}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-zinc-400 cursor-pointer hover:text-[var(--accent)]" onClick={() => setView('chat')}>
+                        <MessageCircle size={20} />
+                        <span className="text-xs">{42 + i * 5}</span>
+                      </div>
                     </div>
                   </div>
+                );
+              })
+            ) : (
+              <div className="space-y-4">
+                {/* Video Post */}
+                {VALENTINA_VIDEOS.map((videoUrl, i) => (
+                  <div key={i} className="of-card p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <div className="w-10 h-10 rounded-full overflow-hidden">
+                          <img src={VALENTINA_IMAGES[0]} alt="Avatar" className="w-full h-full object-cover" />
+                        </div>
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm">Valentina</p>
+                        <p className="text-[10px] text-zinc-500">hace un momento</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-zinc-300">
+                      Les dejo este videito exclusivo por aquí... espero que les guste 💋
+                    </p>
+                    <div className="relative aspect-video rounded-lg overflow-hidden bg-black shadow-2xl">
+                      <iframe
+                        src={`${videoUrl}?autoplay=0&title=0&byline=0&portrait=0`}
+                        className="absolute inset-0 w-full h-full"
+                        frameBorder="0"
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                      ></iframe>
+                    </div>
+                    <div className="flex items-center gap-6 pt-2">
+                      <div className="flex items-center gap-1.5 text-zinc-400">
+                        <Heart size={20} />
+                        <span className="text-xs">452</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-zinc-400 cursor-pointer hover:text-[var(--accent)]" onClick={() => setView('chat')}>
+                        <MessageCircle size={20} />
+                        <span className="text-xs">89</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Media Grid for Images */}
+                <div className="grid grid-cols-3 gap-1">
+                  {VALENTINA_IMAGES.map((img, i) => {
+                    const isUnlocked = unlockedIndices.includes(i);
+                    return (
+                      <div 
+                        key={i} 
+                        className="aspect-square relative bg-zinc-900 overflow-hidden cursor-pointer"
+                        onClick={() => isUnlocked && setSelectedImage(img)}
+                      >
+                        <img 
+                          src={img} 
+                          alt="Media" 
+                          className={`w-full h-full object-cover transition-all duration-500 ${!isUnlocked ? 'blur-sm' : 'blur-0'}`}
+                          referrerPolicy="no-referrer"
+                        />
+                        {!isUnlocked && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                            <Lock size={16} className="text-white/60" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </div>
+            )}
           </div>
         </div>
       </main>
