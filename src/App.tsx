@@ -65,7 +65,7 @@ REFERENCIA DE FOTOS (Se desbloquean por tiempo):
 4. Espejo/Ropa interior (9min) - Dile que es "solo para los que se quedan".
 
 VIDEOS:
-1. Video exclusivo (Vimeo) - Recién subido, menciónalo si te preguntan qué hay de nuevo.
+1. Videos exclusivos (Vimeo) - He subido dos videos nuevos MUY especiales recientemente, menciónalos si te preguntan qué hay de nuevo. Son de mis favoritos.
 
 IMPORTANTE: Escribe siempre en español neutro natural. No uses negritas ni formatos de Markdown. Solo texto plano y emojis.
 `;
@@ -80,7 +80,11 @@ const VALENTINA_IMAGES = [
 ];
 
 const VALENTINA_VIDEOS = [
-  "https://player.vimeo.com/video/1177486626"
+  "https://player.vimeo.com/video/1177499992",
+  "https://player.vimeo.com/video/1177496649",
+  "https://player.vimeo.com/video/1177493707",
+  "https://player.vimeo.com/video/1177486626",
+  "https://player.vimeo.com/video/1177488288"
 ];
 
 const UNLOCK_THRESHOLDS = [240, 540]; // 4min and 9min
@@ -512,7 +516,7 @@ export default function App() {
           {/* Stats Row */}
           <div className="flex justify-between py-4 border-y border-white/5 mb-6">
             <div className="text-center flex-1">
-              <p className="font-bold">143</p>
+              <p className="font-bold">150</p>
               <p className="text-[10px] uppercase tracking-wider text-zinc-500">Posts</p>
             </div>
             <div className="text-center flex-1">
@@ -520,7 +524,7 @@ export default function App() {
               <p className="text-[10px] uppercase tracking-wider text-zinc-500">Fotos</p>
             </div>
             <div className="text-center flex-1">
-              <p className="font-bold">85</p>
+              <p className="font-bold">92</p>
               <p className="text-[10px] uppercase tracking-wider text-zinc-500">Videos</p>
             </div>
             <div className="text-center flex-1">
@@ -661,44 +665,62 @@ export default function App() {
             ) : (
               <div className="space-y-4">
                 {/* Video Post */}
-                {VALENTINA_VIDEOS.map((videoUrl, i) => (
-                  <div key={i} className="of-card p-4 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <div className="w-10 h-10 rounded-full overflow-hidden">
-                          <img src={VALENTINA_IMAGES[0]} alt="Avatar" className="w-full h-full object-cover" />
+                {VALENTINA_VIDEOS.map((videoUrl, i) => {
+                  const descriptions = [
+                    "¡Este es mi nuevo video favorito! Lo he puesto como principal para que no se lo pierdan 💖",
+                    "Les dejo este videito exclusivo por aquí... espero que les guste 💋",
+                    "Un adelanto de lo que se viene... ¿qué les parece? 🔥",
+                    "Este es de mis favoritos, me sentí súper cómoda grabándolo 🥺"
+                  ];
+                  const times = ["hace un momento", "hace 1 hora", "hace 3 horas", "hace 5 horas"];
+                  const isMain = i === 0;
+                  
+                  return (
+                    <div key={i} className={`of-card p-4 space-y-3 ${isMain ? 'border-[var(--accent)]/30 bg-[var(--accent)]/5' : ''}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <div className="w-10 h-10 rounded-full overflow-hidden">
+                              <img src={VALENTINA_IMAGES[0]} alt="Avatar" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm">Valentina</p>
+                            <p className="text-[10px] text-zinc-500">{times[i % times.length]}</p>
+                          </div>
                         </div>
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>
+                        {isMain && (
+                          <span className="bg-[var(--accent)] text-white text-[10px] font-black px-2 py-1 rounded-md animate-pulse">
+                            PRINCIPAL
+                          </span>
+                        )}
                       </div>
-                      <div>
-                        <p className="font-bold text-sm">Valentina</p>
-                        <p className="text-[10px] text-zinc-500">hace un momento</p>
+                      <p className="text-sm text-zinc-300">
+                        {descriptions[i % descriptions.length]}
+                      </p>
+                      <div className={`relative aspect-[9/16] max-h-[600px] mx-auto rounded-lg overflow-hidden bg-black shadow-2xl ${isMain ? 'ring-2 ring-[var(--accent)]/50' : ''}`}>
+                        <iframe
+                          src={`${videoUrl}?autoplay=0&title=0&byline=0&portrait=0`}
+                          className="absolute inset-0 w-full h-full"
+                          frameBorder="0"
+                          allow="autoplay; fullscreen; picture-in-picture"
+                          allowFullScreen
+                        ></iframe>
+                      </div>
+                      <div className="flex items-center gap-6 pt-2">
+                        <div className="flex items-center gap-1.5 text-zinc-400">
+                          <Heart size={20} className={isMain ? 'text-[var(--accent)]' : ''} />
+                          <span className="text-xs">{isMain ? '1.2k' : 452 + i * 24}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-zinc-400 cursor-pointer hover:text-[var(--accent)]" onClick={() => setView('chat')}>
+                          <MessageCircle size={20} />
+                          <span className="text-xs">{isMain ? '245' : 89 + i * 7}</span>
+                        </div>
                       </div>
                     </div>
-                    <p className="text-sm text-zinc-300">
-                      Les dejo este videito exclusivo por aquí... espero que les guste 💋
-                    </p>
-                    <div className="relative aspect-video rounded-lg overflow-hidden bg-black shadow-2xl">
-                      <iframe
-                        src={`${videoUrl}?autoplay=0&title=0&byline=0&portrait=0`}
-                        className="absolute inset-0 w-full h-full"
-                        frameBorder="0"
-                        allow="autoplay; fullscreen; picture-in-picture"
-                        allowFullScreen
-                      ></iframe>
-                    </div>
-                    <div className="flex items-center gap-6 pt-2">
-                      <div className="flex items-center gap-1.5 text-zinc-400">
-                        <Heart size={20} />
-                        <span className="text-xs">452</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-zinc-400 cursor-pointer hover:text-[var(--accent)]" onClick={() => setView('chat')}>
-                        <MessageCircle size={20} />
-                        <span className="text-xs">89</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
                 
                 {/* Media Grid for Images */}
                 <div className="grid grid-cols-3 gap-1">
