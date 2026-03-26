@@ -140,6 +140,14 @@ export default function App() {
   // Initialize chat if not already done
   const initChat = () => {
     if (!chatRef.current) {
+      const apiKey = process.env.GEMINI_API_KEY;
+      console.log("Initializing chat. API Key present:", !!apiKey);
+      
+      if (!apiKey) {
+        console.error("GEMINI_API_KEY is missing. Chat will not function.");
+        return;
+      }
+
       try {
         const ai = getAI();
         chatRef.current = ai.chats.create({
@@ -184,7 +192,7 @@ export default function App() {
       const errorMessage: Message = {
         id: Date.now().toString(),
         role: 'model',
-        text: "ay, se me trabó el cel... ¿qué me decías? 🙄 (Error de conexión)",
+        text: "ay, se me trabó el cel... ¿qué me decías? 🙄 (Error: No se pudo conectar con Valentina. Verifica tu conexión o configuración)",
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -207,11 +215,11 @@ export default function App() {
         message: inputValue
       });
 
-      if (!response || !response.text) {
+      const fullText = response.text || "";
+      if (!fullText.trim()) {
         throw new Error("Empty response from AI");
       }
 
-      const fullText = response.text;
       // Split by double newlines or single newlines that look like message breaks
       const parts = fullText.split(/\n\n+/).filter(p => p.trim().length > 0);
 
@@ -224,11 +232,15 @@ export default function App() {
         }
       }
 
+      if (finalParts.length === 0) {
+        finalParts = [fullText];
+      }
+
       for (let i = 0; i < finalParts.length; i++) {
         // Add a small delay between messages to simulate typing
         if (i > 0) {
           setIsTyping(true);
-          await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 2000));
+          await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1500));
         }
 
         const valentinaMessage: Message = {
