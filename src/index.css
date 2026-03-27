@@ -91,6 +91,34 @@ body {
   border: 1px solid var(--border);
 }
 
+/* Galeria Fixes */
+.galeria {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.galeria-item {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    position: relative !important;
+}
+
+.galeria-item img {
+    width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
+    display: block !important;
+    position: relative !important;
+    top: 0 !important;
+    left: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
 /* Hide scrollbar but keep functionality */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
@@ -128,6 +156,8 @@ img {
   -moz-user-drag: none;
   -o-user-drag: none;
   user-drag: none;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: auto;
 }
 
 input, textarea {

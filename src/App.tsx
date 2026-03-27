@@ -148,7 +148,7 @@ const FREE_VIDEO_INDICES = [0]; // 1st video
 
 const Logo = ({ className = "" }: { className?: string }) => (
   <div className={`flex items-center gap-2 ${className}`}>
-    <div className="w-10 h-10 rounded-xl shadow-lg shadow-rose-500/20 border border-white/10 relative overflow-hidden">
+    <div className="w-10 h-10 rounded-xl shadow-lg shadow-rose-500/20 border border-white/10 relative overflow-visible">
       <img 
         src="https://i.ibb.co/Kcrp5NxV/logo.png" 
         alt="Logo" 
@@ -448,7 +448,7 @@ function ValentinaApp() {
 
   if (view === 'chat') {
     return (
-      <div className="flex flex-col h-screen max-w-2xl mx-auto bg-black overflow-hidden shadow-2xl border-x border-white/5 relative">
+      <div className="flex flex-col h-screen max-w-2xl mx-auto bg-black shadow-2xl border-x border-white/5 relative">
         {/* Header */}
         <header className="glass sticky top-0 z-10 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -635,7 +635,7 @@ function ValentinaApp() {
       {/* Profile Content */}
       <main className="flex-1 overflow-y-auto no-scrollbar">
         {/* Cover Image */}
-        <div className="relative w-full bg-black group">
+        <div className="relative w-full bg-black group overflow-visible">
           <img 
             src={VALENTINA_IMAGES[1]} 
             alt="Cover" 
@@ -656,11 +656,11 @@ function ValentinaApp() {
         <div className="px-4 -mt-12 relative z-10">
           <div className="flex justify-between items-end mb-4">
             <div className="relative">
-              <div className="w-24 h-24 rounded-full border-4 border-black bg-zinc-900 relative overflow-hidden">
+              <div className="w-24 h-24 rounded-2xl border-4 border-black bg-zinc-900 relative overflow-visible">
                 <img 
                   src={VALENTINA_IMAGES[0]} 
                   alt="Profile" 
-                  className="w-full h-full object-contain block"
+                  className="w-full h-full object-contain block rounded-2xl"
                   referrerPolicy="no-referrer"
                 />
               </div>
@@ -729,12 +729,12 @@ function ValentinaApp() {
                   className="shrink-0 cursor-pointer group flex flex-col items-center"
                   onClick={() => setSelectedImage(img)}
                 >
-                  <div className={`w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-[var(--accent)] to-rose-300`}>
-                    <div className="w-full h-full rounded-full border-2 border-black relative">
+                  <div className={`w-16 h-16 rounded-xl p-[2px] bg-gradient-to-tr from-[var(--accent)] to-rose-300`}>
+                    <div className="w-full h-full rounded-xl border-2 border-black relative overflow-visible">
                       <img 
                         src={img} 
                         alt={`Story ${i}`} 
-                        className={`w-full h-full object-contain transition-all rounded-full`}
+                        className={`w-full h-full object-contain transition-all rounded-xl`}
                         referrerPolicy="no-referrer"
                       />
                     </div>
@@ -861,7 +861,7 @@ function ValentinaApp() {
                     <p className="text-sm text-zinc-300">
                       {POST_DESCRIPTIONS[i % POST_DESCRIPTIONS.length]}
                     </p>
-                    <div className="relative rounded-lg bg-black group cursor-pointer" onClick={() => setSelectedImage(img)}>
+                    <div className="relative bg-black group cursor-pointer overflow-visible" onClick={() => setSelectedImage(img)}>
                       <img 
                         src={img} 
                         alt="Post" 
@@ -973,7 +973,7 @@ function ValentinaApp() {
                 })}
                 
                 {/* Media Grid for Images */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                <div className="galeria grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
                   {VALENTINA_IMAGES.map((img, i) => {
                     const isUnlocked = unlockedIndices.includes(i);
                     const lockableIndex = allLockable.findIndex(item => item.type === 'image' && item.index === i);
@@ -983,14 +983,14 @@ function ValentinaApp() {
                     return (
                       <div 
                         key={i} 
-                        className="relative bg-black cursor-pointer overflow-visible"
+                        className="galeria-item relative bg-black cursor-pointer"
                         onClick={() => setSelectedImage(img)}
                       >
                         <img 
                           src={img} 
                           alt={`Sesión fotográfica ${i + 1}`}
                           loading="lazy"
-                          className={`w-full h-auto object-contain transition-all duration-500 block bg-zinc-900/30`}
+                          className="transition-all duration-500 bg-zinc-900/30"
                           referrerPolicy="no-referrer"
                         />
                       </div>
