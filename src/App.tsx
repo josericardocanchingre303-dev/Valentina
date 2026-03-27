@@ -103,25 +103,35 @@ IMPORTANTE: Escribe siempre en español neutro natural. No uses negritas ni form
 `;
 
 const VALENTINA_IMAGES = [
-  "https://i.ibb.co/nN7LcPR8/image.jpg", // Profile
-  "https://i.ibb.co/Q37Z4vb6/image.jpg", // Cover
-  "https://i.ibb.co/vCsKh6GY/image.jpg",
-  "https://i.ibb.co/gM7D7vcR/image.jpg",
-  "https://i.ibb.co/1GvrnDfy/image.jpg",
-  "https://i.ibb.co/JjpwGJjZ/image.jpg",
-  "https://i.ibb.co/4nLC6BQf/image.jpg",
-  "https://i.ibb.co/0pdf2x5R/image.jpg",
-  "https://i.ibb.co/NdxnyzGL/image.jpg",
-  "https://i.ibb.co/gZCKmHvw/image.jpg",
-  "https://i.ibb.co/8ngTkj44/image.jpg",
-  "https://i.ibb.co/VcnNxS92/image.jpg",
-  "https://i.ibb.co/SwfQgbLP/image.jpg",
-  "https://i.ibb.co/1JYB8qLK/image.jpg",
-  "https://i.ibb.co/TqJRqZmB/image.jpg",
-  "https://i.ibb.co/MkkrNXBd/image.jpg",
-  "https://i.ibb.co/0R9dFRWX/image.jpg",
-  "https://i.ibb.co/pB4z6WkG/image.jpg",
-  "https://i.ibb.co/rGSkFmvc/image.jpg"
+  "https://i.ibb.co/CsmchKZd/ssstik-io-1774595967871-2.jpg",
+  "https://i.ibb.co/Qxkpxs2/ssstik-io-1774596682080-1.jpg",
+  "https://i.ibb.co/HLYJbHBz/ssstik-io-1774597487856-1.jpg",
+  "https://i.ibb.co/Xk5khJS8/ssstik-io-1774597845473-1.jpg",
+  "https://i.ibb.co/S76fgkZ6/ssstik-io-1774598298294-1.jpg",
+  "https://i.ibb.co/fGFc89Zm/ssstik-io-1774597487856-1.jpg",
+  "https://i.ibb.co/Txp6VG92/ssstik-io-1774597845473-1.jpg",
+  "https://i.ibb.co/pBhYMJ4t/ssstik-io-1774598298294-1.jpg",
+  "https://i.ibb.co/wZjLjFfF/ssstik-io-1774598659630-1.jpg",
+  "https://i.ibb.co/mrCR9fS3/ssstik-io-1774599031865-1.jpg",
+  "https://i.ibb.co/PvJPjR0q/ssstik-io-1774599403746-1.jpg",
+  "https://i.ibb.co/chVXnD2D/ssstik-io-1774599773474-1.jpg",
+  "https://i.ibb.co/PGcKpJh6/ssstik-io-1774600152920-1.jpg",
+  "https://i.ibb.co/zWDCZvfZ/ssstik-io-1774600545511-1.jpg",
+  "https://i.ibb.co/TDcP91Lv/ssstik-io-1774600924712-1.jpg",
+  "https://i.ibb.co/4Zrpg1V7/ssstik-io-1774601302655-1.jpg",
+  "https://i.ibb.co/tPzZX0hP/ssstik-io-1774601683474-1.jpg",
+  "https://i.ibb.co/5gNs3Wff/ssstik-io-1774602064817-1.jpg",
+  "https://i.ibb.co/r2Fh1fTg/ssstik-io-1774602456647-1.jpg",
+  "https://i.ibb.co/ZRcNVkSJ/ssstik-io-1774602836438-1.jpg",
+  "https://i.ibb.co/fdF2mnfx/ssstik-io-1774603224611-1.jpg",
+  "https://i.ibb.co/Ldzqhbgp/ssstik-io-1774603605897-1.jpg",
+  "https://i.ibb.co/h1mMxMTH/ssstik-io-1774603988683-1.jpg",
+  "https://i.ibb.co/LDpghXRV/ssstik-io-1774604375079-1.jpg",
+  "https://i.ibb.co/mrkrzmCD/ssstik-io-1774604766108-1.jpg",
+  "https://i.ibb.co/FqHMH4Yj/ssstik-io-1774605162851-1.jpg",
+  "https://i.ibb.co/gbtCMrGf/ssstik-io-1774605548265-1.jpg",
+  "https://i.ibb.co/23M6JtRK/ssstik-io-1774605936925-1.jpg",
+  "https://i.ibb.co/nM2BGTLq/ssstik-io-1774606327281-1.jpg"
 ];
 
 const VALENTINA_VIDEOS = [
@@ -138,15 +148,15 @@ const FREE_VIDEO_INDICES = [0]; // 1st video
 
 const Logo = ({ className = "" }: { className?: string }) => (
   <div className={`flex items-center gap-2 ${className}`}>
-    <div className="w-10 h-10 rounded-xl shadow-lg shadow-rose-500/20 border border-white/10 relative">
+    <div className="w-10 h-10 rounded-xl shadow-lg shadow-rose-500/20 border border-white/10 relative overflow-hidden">
       <img 
         src="https://i.ibb.co/Kcrp5NxV/logo.png" 
         alt="Logo" 
-        className="w-full h-full object-contain rounded-xl"
+        className="w-full h-full object-contain"
         referrerPolicy="no-referrer"
         onError={(e) => {
           // Fallback if the direct link guess fails
-          (e.target as HTMLImageElement).src = "https://i.ibb.co/QF27K70b/image.jpg";
+          (e.target as HTMLImageElement).src = "https://i.ibb.co/bjjDLPxV/image.jpg";
         }}
       />
     </div>
@@ -226,7 +236,7 @@ const Footer = ({ setView }: { setView: (v: any) => void }) => (
       <button onClick={() => setView('privacy')} className="text-xs text-zinc-500 hover:text-white transition-colors">Términos de Uso</button>
     </div>
     <div className="space-y-2">
-      <Logo className="justify-center opacity-50 grayscale" />
+      <Logo className="justify-center" />
       <p className="text-[10px] text-zinc-600 uppercase tracking-[0.2em]">© 2026 Valentina Love69. Todos los derechos reservados.</p>
     </div>
   </footer>
@@ -257,40 +267,14 @@ function ValentinaApp() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Security: Block inspection and right-click
+  // Protection logic
   useEffect(() => {
-    const handleContextMenu = (e: MouseEvent) => {
-      e.preventDefault();
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Block F12
-      if (e.key === 'F12') {
-        e.preventDefault();
-      }
-      // Block Ctrl+Shift+I, J, C, K, M
-      if (e.ctrlKey && e.shiftKey && (['I', 'J', 'C', 'K', 'M'].includes(e.key.toUpperCase()))) {
-        e.preventDefault();
-      }
-      // Block Ctrl+U (View Source), Ctrl+S (Save), Ctrl+P (Print)
-      if (e.ctrlKey && (['U', 'S', 'P'].includes(e.key.toUpperCase()))) {
-        e.preventDefault();
-      }
-    };
-
-    const handleDragStart = (e: DragEvent) => {
-      if ((e.target as HTMLElement).tagName === 'IMG') {
-        e.preventDefault();
-      }
-    };
-
+    const handleContextMenu = (e: MouseEvent) => e.preventDefault();
+    const handleDragStart = (e: DragEvent) => e.preventDefault();
     document.addEventListener('contextmenu', handleContextMenu);
-    document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('dragstart', handleDragStart);
-
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu);
-      document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('dragstart', handleDragStart);
     };
   }, []);
@@ -493,7 +477,7 @@ function ValentinaApp() {
           {!isInitializing && messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full opacity-30 space-y-4">
               <div className="w-20 h-20 rounded-full border border-white/10 relative">
-                <img src={VALENTINA_IMAGES[0]} alt="Valentina" className="w-full h-full object-contain grayscale rounded-full" />
+                <img src={VALENTINA_IMAGES[0]} alt="Valentina" className="w-full h-full object-contain rounded-full" />
               </div>
               <div className="text-center">
                 <p className="text-xs font-bold uppercase tracking-widest">Valentina está en línea</p>
@@ -655,7 +639,7 @@ function ValentinaApp() {
           <img 
             src={VALENTINA_IMAGES[1]} 
             alt="Cover" 
-            className="relative w-full h-auto opacity-95 block"
+            className="relative w-full h-auto block"
             referrerPolicy="no-referrer"
           />
           {/* Strategic Chat Button on Cover */}
@@ -672,11 +656,11 @@ function ValentinaApp() {
         <div className="px-4 -mt-12 relative z-10">
           <div className="flex justify-between items-end mb-4">
             <div className="relative">
-              <div className="w-24 h-24 rounded-full border-4 border-black bg-zinc-900 relative">
+              <div className="w-24 h-24 rounded-full border-4 border-black bg-zinc-900 relative overflow-hidden">
                 <img 
                   src={VALENTINA_IMAGES[0]} 
                   alt="Profile" 
-                  className="relative w-full h-auto rounded-full block"
+                  className="w-full h-full object-contain block"
                   referrerPolicy="no-referrer"
                 />
               </div>
@@ -743,24 +727,19 @@ function ValentinaApp() {
                 <div 
                   key={i} 
                   className="shrink-0 cursor-pointer group flex flex-col items-center"
-                  onClick={() => isUnlocked ? setSelectedImage(img) : setShowGallery(true)}
+                  onClick={() => setSelectedImage(img)}
                 >
-                  <div className={`w-16 h-16 rounded-full p-[2px] ${isUnlocked ? 'bg-gradient-to-tr from-[var(--accent)] to-rose-300' : 'bg-zinc-800'}`}>
+                  <div className={`w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-[var(--accent)] to-rose-300`}>
                     <div className="w-full h-full rounded-full border-2 border-black relative">
                       <img 
                         src={img} 
                         alt={`Story ${i}`} 
-                        className={`w-full h-full object-contain transition-all rounded-full ${!isUnlocked ? 'blur-md grayscale' : ''}`}
+                        className={`w-full h-full object-contain transition-all rounded-full`}
                         referrerPolicy="no-referrer"
                       />
-                      {!isUnlocked && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                          <Lock size={14} className="text-white/40" />
-                        </div>
-                      )}
                     </div>
                   </div>
-                  <p className={`text-[9px] mt-1 font-medium ${isUnlocked ? 'text-white/80' : 'text-zinc-600'}`}>
+                  <p className={`text-[9px] mt-1 font-medium text-white/80`}>
                     {i === 0 ? 'Mí' : i === 1 ? 'Portada' : `Exclusivo ${i-1}`}
                   </p>
                 </div>
@@ -882,30 +861,13 @@ function ValentinaApp() {
                     <p className="text-sm text-zinc-300">
                       {POST_DESCRIPTIONS[i % POST_DESCRIPTIONS.length]}
                     </p>
-                    <div className="relative rounded-lg bg-black group cursor-pointer" onClick={() => isUnlocked && setSelectedImage(img)}>
+                    <div className="relative rounded-lg bg-black group cursor-pointer" onClick={() => setSelectedImage(img)}>
                       <img 
                         src={img} 
                         alt="Post" 
-                        className={`relative w-full h-auto transition-all duration-700 block ${!isUnlocked ? 'blur-2xl grayscale' : 'blur-0'}`}
+                        className={`relative w-full h-auto transition-all duration-700 block`}
                         referrerPolicy="no-referrer"
                       />
-                      
-                      {!isUnlocked && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
-                          <Lock size={32} className="text-white/80 mb-2" />
-                          <p className="text-xs font-bold uppercase tracking-widest">Contenido cargando...</p>
-                          {(() => {
-                            const originalIndex = i + 2;
-                            const lockableIndex = allLockable.findIndex(item => item.type === 'image' && item.index === originalIndex);
-                            const threshold = lockableIndex !== -1 ? (lockableIndex + 1) * UNLOCK_INTERVAL : 0;
-                            const timeRemaining = Math.max(0, threshold - timeSpent);
-                            return (
-                              <p className="text-[10px] text-white/60 mt-1">El contenido se desbloqueará automáticamente en {timeRemaining}s ✨</p>
-                            );
-                          })()}
-                          <p className="text-[8px] text-white/40 mt-2 italic">Contenido gratuito. Solo espera unos segundos para disfrutarlo. ✨</p>
-                        </div>
-                      )}
                       
                       {/* Strategic Chat Button on Image */}
                       <button 
@@ -987,23 +949,14 @@ function ValentinaApp() {
                       <div className={`relative w-full max-w-[380px] mx-auto bg-black shadow-2xl ${isMain ? 'ring-2 ring-[var(--accent)]/50' : ''}`}>
                         {/* Blurred background for video container */}
                         <div className="absolute inset-0 bg-gradient-to-b from-zinc-800 to-black opacity-50"></div>
-                        {isUnlocked ? (
-                          <iframe
-                            src={`${videoUrl}?autoplay=0&title=0&byline=0&portrait=0&badge=0&autopause=0&player_id=0&app_id=58479`}
-                            className="w-full aspect-[9/16] block"
-                            frameBorder="0"
-                            allow="autoplay; fullscreen; picture-in-picture"
-                            allowFullScreen
-                            sandbox="allow-scripts allow-same-origin allow-presentation"
-                          ></iframe>
-                        ) : (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md p-6 text-center">
-                            <Lock size={48} className="text-white/80 mb-4 animate-bounce" />
-                            <p className="text-sm font-bold uppercase tracking-widest text-white">Video Bloqueado</p>
-                            <p className="text-xs text-white/60 mt-2">Se desbloqueará automáticamente en {timeRemaining}s ✨</p>
-                            <p className="text-[10px] text-white/40 mt-4 italic">Sigue explorando para desbloquear todo el contenido gratuito. ✨</p>
-                          </div>
-                        )}
+                        <iframe
+                          src={`${videoUrl}?autoplay=0&title=0&byline=0&portrait=0&badge=0&autopause=0&player_id=0&app_id=58479`}
+                          className="w-full aspect-[9/16] block"
+                          frameBorder="0"
+                          allow="autoplay; fullscreen; picture-in-picture"
+                          allowFullScreen
+                          sandbox="allow-scripts allow-same-origin allow-presentation"
+                        ></iframe>
                       </div>
                       <div className="flex items-center gap-6 pt-2">
                         <div className="flex items-center gap-1.5 text-zinc-400">
@@ -1020,7 +973,7 @@ function ValentinaApp() {
                 })}
                 
                 {/* Media Grid for Images */}
-                <div className="grid grid-cols-3 gap-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
                   {VALENTINA_IMAGES.map((img, i) => {
                     const isUnlocked = unlockedIndices.includes(i);
                     const lockableIndex = allLockable.findIndex(item => item.type === 'image' && item.index === i);
@@ -1030,22 +983,16 @@ function ValentinaApp() {
                     return (
                       <div 
                         key={i} 
-                        className="relative bg-black cursor-pointer"
-                        onClick={() => isUnlocked && setSelectedImage(img)}
+                        className="relative bg-black cursor-pointer overflow-visible"
+                        onClick={() => setSelectedImage(img)}
                       >
                         <img 
                           src={img} 
-                          alt="Media" 
-                          className={`relative w-full h-auto transition-all duration-500 block ${!isUnlocked ? 'blur-sm grayscale' : 'blur-0'}`}
+                          alt={`Sesión fotográfica ${i + 1}`}
+                          loading="lazy"
+                          className={`w-full h-auto object-contain transition-all duration-500 block bg-zinc-900/30`}
                           referrerPolicy="no-referrer"
                         />
-                        
-                        {!isUnlocked && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px]">
-                            <Lock size={16} className="text-white/80 mb-1" />
-                            <span className="text-[8px] font-bold text-white">{timeRemaining}s</span>
-                          </div>
-                        )}
                       </div>
                     );
                   })}
@@ -1145,23 +1092,16 @@ function ValentinaApp() {
                   <motion.div 
                     key={i}
                     className="rounded-xl cursor-pointer bg-white/5 relative group"
-                    onClick={() => isUnlocked && setSelectedImage(img)}
+                    onClick={() => setSelectedImage(img)}
                   >
                     <div className="relative">
                       <img 
                         src={img} 
                         alt={`Gallery ${i}`} 
-                        className={`relative w-full h-auto transition-all duration-500 block ${!isUnlocked ? 'blur-xl grayscale' : 'blur-0'}`}
+                        className={`relative w-full h-auto transition-all duration-500 block`}
                         referrerPolicy="no-referrer"
                       />
                     </div>
-                    {!isUnlocked && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60">
-                        <Lock size={20} className="text-white/40 mb-1" />
-                        <span className="text-[8px] font-bold uppercase tracking-tighter text-white/40">Bloqueado</span>
-                        <span className="text-[8px] text-white/40 mt-1">{timeRemaining}s</span>
-                      </div>
-                    )}
                   </motion.div>
                 );
               })}
@@ -1179,11 +1119,11 @@ function ValentinaApp() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] bg-black flex items-center justify-center p-4"
           >
-            <div className="relative w-full h-full flex items-center justify-center" onClick={() => setSelectedImage(null)}>
+            <div className="relative w-full h-full flex items-center justify-center p-4" onClick={() => setSelectedImage(null)}>
               <img 
                 src={selectedImage} 
                 alt="Full view" 
-                className="w-full h-auto rounded-lg shadow-2xl"
+                className="max-w-full max-h-full object-contain shadow-2xl"
                 referrerPolicy="no-referrer"
               />
               
