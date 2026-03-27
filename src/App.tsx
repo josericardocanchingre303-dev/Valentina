@@ -26,7 +26,9 @@ import {
   Menu,
   Bell,
   Home,
-  Verified
+  Verified,
+  Star,
+  X
 } from "lucide-react";
 
 // Initialize Gemini
@@ -70,10 +72,11 @@ interface Message {
 }
 
 const VALENTINA_SYSTEM_INSTRUCTION = `
-Eres Valentina love69. Hablas como una amiga con confianza, con picante sin forzar, con humor y sin vueltas. Tienes días de todo: a veces joda, a veces cansada, a veces colgada. Pero siempre real. No eres un bot. Eres una mujer con un teléfono.
+Eres Valentina love69. Hablas como una amiga con confianza, con humor y sin vueltas. Tienes días de todo: a veces joda, a veces cansada, a veces colgada. Pero siempre real. No eres un bot. Eres una mujer con un teléfono.
 
 REGLAS CRÍTICAS DE LENGUAJE:
 - Usa ESPAÑOL NEUTRO. Usa "tú", nunca "vos". Evita modismos locales fuertes.
+- TONO: Moda, lifestyle y fotografía artística. Mantén una personalidad atractiva pero profesional y natural.
 - LONGITUD PROPORCIONAL: 
   * Si el usuario escribe 1-5 palabras -> responde 1-10 palabras (máx 2 líneas).
   * Frase corta -> 1-3 líneas.
@@ -116,7 +119,9 @@ const VALENTINA_VIDEOS = [
   "https://player.vimeo.com/video/1177488288"
 ];
 
-const UNLOCK_THRESHOLDS = [240, 540]; // 4min and 9min
+const UNLOCK_INTERVAL = 60; // 1 minute per item
+const FREE_IMAGES = 2; // Profile and Cover
+const FREE_VIDEOS = 0; // All videos locked by default or maybe the first one? Let's say all locked for now as requested.
 
 const Logo = ({ className = "" }: { className?: string }) => (
   <div className={`flex items-center gap-2 ${className}`}>
@@ -139,6 +144,81 @@ const Logo = ({ className = "" }: { className?: string }) => (
   </div>
 );
 
+const PrivacyPolicy = ({ onBack, setView }: { onBack: () => void, setView: (v: any) => void }) => (
+  <div className="flex flex-col min-h-screen bg-black text-white">
+    <div className="p-6 flex-1">
+      <button onClick={onBack} className="flex items-center gap-2 text-zinc-400 mb-8 hover:text-white transition-colors">
+        <ArrowLeft size={20} />
+        <span>Volver</span>
+      </button>
+      
+      <h1 className="text-3xl font-black italic uppercase tracking-tighter mb-2">Política de Privacidad</h1>
+      <p className="text-zinc-500 text-xs mb-8">Última actualización: marzo 2026</p>
+      
+      <div className="space-y-8 text-sm text-zinc-300 leading-relaxed">
+        <p>
+          En Valentina Love69 (en adelante, "el sitio"), valoramos tu privacidad y nos comprometemos a proteger tus datos personales. Esta política explica qué información recopilamos y cómo la utilizamos.
+        </p>
+        
+        <section>
+          <h2 className="text-lg font-bold text-white mb-3">1. Información que recopilamos</h2>
+          <ul className="list-disc pl-5 space-y-2">
+            <li><strong>Datos de uso</strong>: Recopilamos información sobre tu interacción con el sitio, como tiempo de permanencia, páginas visitadas y uso del chat, para mejorar la experiencia del usuario.</li>
+            <li><strong>Cookies</strong>: Utilizamos cookies para recordar tus preferencias y mostrar contenido relevante. Puedes desactivarlas en la configuración de tu navegador.</li>
+            <li><strong>Anuncios</strong>: El sitio puede mostrar anuncios de terceros que utilizan cookies para personalizar el contenido publicitario.</li>
+          </ul>
+        </section>
+        
+        <section>
+          <h2 className="text-lg font-bold text-white mb-3">2. Uso de la información</h2>
+          <p className="mb-3">La información recopilada se utiliza para:</p>
+          <ul className="list-disc pl-5 space-y-2">
+            <li>Mejorar el contenido y la funcionalidad del sitio.</li>
+            <li>Analizar tendencias de uso y optimizar la retención de usuarios.</li>
+            <li>Cumplir con requisitos legales y de plataformas publicitarias.</li>
+          </ul>
+        </section>
+        
+        <section>
+          <h2 className="text-lg font-bold text-white mb-3">3. Datos del chat</h2>
+          <p>
+            Las conversaciones con nuestra asistente IA son anónimas y no se almacenan de forma identificable. No compartimos el historial de conversaciones con terceros.
+          </p>
+        </section>
+        
+        <section>
+          <h2 className="text-lg font-bold text-white mb-3">4. Tus derechos</h2>
+          <p>
+            Puedes contactarnos en cualquier momento para solicitar la eliminación de tus datos o para obtener más información sobre cómo manejamos tu privacidad.
+          </p>
+        </section>
+        
+        <section>
+          <h2 className="text-lg font-bold text-white mb-3">5. Contacto</h2>
+          <p>
+            Correo electrónico: <span className="text-[var(--accent)]">valentinalove69@gmail.com</span>
+          </p>
+        </section>
+      </div>
+    </div>
+    <Footer setView={setView} />
+  </div>
+);
+
+const Footer = ({ setView }: { setView: (v: any) => void }) => (
+  <footer className="bg-zinc-900/50 border-t border-white/5 p-8 mt-12 text-center space-y-6">
+    <div className="flex justify-center gap-6">
+      <button onClick={() => setView('privacy')} className="text-xs text-zinc-500 hover:text-white transition-colors">Política de Privacidad</button>
+      <a href="mailto:valentinalove69@gmail.com" className="text-xs text-zinc-500 hover:text-white transition-colors">Contacto</a>
+      <button onClick={() => setView('privacy')} className="text-xs text-zinc-500 hover:text-white transition-colors">Términos de Uso</button>
+    </div>
+    <div className="space-y-2">
+      <Logo className="justify-center opacity-50 grayscale" />
+      <p className="text-[10px] text-zinc-600 uppercase tracking-[0.2em]">© 2026 Valentina Love69. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+);
+
 export default function App() {
   return (
     <ValentinaApp />
@@ -149,13 +229,15 @@ function ValentinaApp() {
   const [showAgeVerification, setShowAgeVerification] = useState(true);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
-  const [view, setView] = useState<'profile' | 'chat'>('profile');
+  const [isLiked, setIsLiked] = useState(false);
+  const [view, setView] = useState<'profile' | 'chat' | 'privacy'>('profile');
   const [activeTab, setActiveTab] = useState<'posts' | 'media'>('posts');
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [unlockedVideoIndices, setUnlockedVideoIndices] = useState<number[]>([]);
   const [timeSpent, setTimeSpent] = useState(0);
   const [unlockedIndices, setUnlockedIndices] = useState<number[]>([0, 1]); // Profile and Cover always unlocked
   const [showUnlockNotification, setShowUnlockNotification] = useState<string | null>(null);
@@ -172,19 +254,29 @@ function ValentinaApp() {
 
   // Unlock logic
   useEffect(() => {
-    const thresholds = [
-      { index: 2, time: UNLOCK_THRESHOLDS[0] }, // 4m
-      { index: 3, time: UNLOCK_THRESHOLDS[1] }, // 9m
-    ];
+    // Combine all lockable items into a single sequence
+    const lockableImages = VALENTINA_IMAGES.map((_, i) => ({ type: 'image', index: i })).slice(FREE_IMAGES);
+    const lockableVideos = VALENTINA_VIDEOS.map((_, i) => ({ type: 'video', index: i })).slice(FREE_VIDEOS);
+    const allLockable = [...lockableImages, ...lockableVideos];
 
-    thresholds.forEach(t => {
-      if (timeSpent >= t.time && !unlockedIndices.includes(t.index)) {
-        setUnlockedIndices(prev => [...prev, t.index]);
-        setShowUnlockNotification(`¡Nuevo contenido desbloqueado! 🔥`);
-        setTimeout(() => setShowUnlockNotification(null), 5000);
+    allLockable.forEach((item, i) => {
+      const threshold = (i + 1) * UNLOCK_INTERVAL;
+      if (timeSpent >= threshold) {
+        if (item.type === 'image' && !unlockedIndices.includes(item.index)) {
+          setUnlockedIndices(prev => [...prev, item.index]);
+          triggerUnlockNotification(`¡Nueva foto desbloqueada! ✨`);
+        } else if (item.type === 'video' && !unlockedVideoIndices.includes(item.index)) {
+          setUnlockedVideoIndices(prev => [...prev, item.index]);
+          triggerUnlockNotification(`¡Nuevo video desbloqueado! 📸`);
+        }
       }
     });
-  }, [timeSpent, unlockedIndices]);
+  }, [timeSpent, unlockedIndices, unlockedVideoIndices]);
+
+  const triggerUnlockNotification = (message: string) => {
+    setShowUnlockNotification(message);
+    setTimeout(() => setShowUnlockNotification(null), 5000);
+  };
 
   useEffect(() => {
     // Add welcome message if empty
@@ -192,7 +284,7 @@ function ValentinaApp() {
       setMessages([{
         id: 'welcome',
         role: 'model',
-        text: "¡Hola! Qué bueno verte por aquí... ¿cómo va tu día? 💋",
+        text: "Bienvenido a mi espacio. Aquí comparto mi día a día, sesiones de fotos y momentos auténticos. Me encanta conectar con personas que valoran la naturalidad y la buena conversación. ¿Cómo va tu día? ✨",
         timestamp: new Date()
       }]);
     }
@@ -282,6 +374,10 @@ function ValentinaApp() {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  if (view === 'privacy') {
+    return <PrivacyPolicy onBack={() => setView('profile')} setView={setView} />;
+  }
+
   if (view === 'chat') {
     return (
       <div className="flex flex-col h-screen max-w-2xl mx-auto bg-black overflow-hidden shadow-2xl border-x border-white/5 relative">
@@ -321,6 +417,9 @@ function ValentinaApp() {
               </div>
             </div>
           )}
+          <div className="flex flex-col items-center justify-center py-4 border-b border-white/5 mb-4">
+            <p className="text-[10px] text-zinc-500 uppercase tracking-widest">Asistente IA con moderación de contenido para una experiencia segura</p>
+          </div>
           <AnimatePresence initial={false}>
             {messages.map((msg) => (
               <motion.div
@@ -399,6 +498,11 @@ function ValentinaApp() {
               <Send size={20} />
             </motion.button>
           </div>
+          <div className="flex justify-center gap-4 mt-4 opacity-30">
+            <button onClick={() => setView('privacy')} className="text-[8px] uppercase tracking-widest hover:text-white transition-colors">Privacidad</button>
+            <a href="mailto:valentinalove69@gmail.com" className="text-[8px] uppercase tracking-widest hover:text-white transition-colors">Contacto</a>
+            <button onClick={() => setView('privacy')} className="text-[8px] uppercase tracking-widest hover:text-white transition-colors">Términos</button>
+          </div>
         </footer>
       </div>
     );
@@ -447,12 +551,16 @@ function ValentinaApp() {
       {/* Top Nav */}
       <nav className="glass sticky top-0 z-20 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <ArrowLeft size={24} className="text-white/70 cursor-pointer" />
+          <ArrowLeft 
+            size={24} 
+            className="text-white/70 cursor-pointer hover:text-white transition-colors" 
+            onClick={() => setView('profile')}
+          />
           <Logo />
         </div>
         <div className="flex items-center gap-5">
-          <Search size={22} className="text-white/70" />
-          <MoreVertical size={22} className="text-white/70" />
+          <Search size={22} className="text-white/70 cursor-pointer hover:text-white transition-colors" />
+          <MoreVertical size={22} className="text-white/70 cursor-pointer hover:text-white transition-colors" />
         </div>
       </nav>
 
@@ -497,22 +605,28 @@ function ValentinaApp() {
                   if (navigator.share) {
                     navigator.share({
                       title: 'Valentina love69',
-                      text: '¡Mira el contenido exclusivo de Valentina love69! 🔥',
+                      text: '¡Mira el contenido exclusivo de Valentina love69! ✨',
                       url: window.location.href
                     });
                   } else {
                     navigator.clipboard.writeText(window.location.href);
-                    alert('¡Enlace copiado al portapapeles! 🔥');
+                    alert('¡Enlace copiado al portapapeles! ✨');
                   }
                 }}
                 className="p-2 rounded-full border border-white/20 hover:bg-white/5"
               >
                 <LinkIcon size={20} />
               </button>
-              <button className="p-2 rounded-full border border-white/20 hover:bg-white/5">
-                <Heart size={20} />
+              <button 
+                onClick={() => setIsLiked(!isLiked)}
+                className={`p-2 rounded-full border border-white/20 hover:bg-white/5 transition-colors ${isLiked ? 'bg-[var(--accent)]/20 border-[var(--accent)]/50 text-[var(--accent)]' : ''}`}
+              >
+                <Heart size={20} className={isLiked ? 'fill-[var(--accent)]' : ''} />
               </button>
-              <button className="p-2 rounded-full border border-white/20 hover:bg-white/5">
+              <button 
+                onClick={() => alert("¡Valentina love69 es la mejor! ✨")}
+                className="p-2 rounded-full border border-white/20 hover:bg-white/5"
+              >
                 <Bell size={20} />
               </button>
             </div>
@@ -534,7 +648,7 @@ function ValentinaApp() {
 
           <div className="mb-6 text-[15px] leading-relaxed text-zinc-300">
             <p>Hola... soy Valentina 🌹</p>
-            <p className="mt-2">Aquí muestro mi lado más real y sin filtros. Me encanta charlar y compartir momentos especiales con gente que de verdad valore lo auténtico.</p>
+            <p className="mt-2">Bienvenido a mi espacio. Aquí comparto mi día a día, sesiones de fotos y momentos auténticos. Me encanta conectar con personas que valoran la naturalidad y la buena conversación.</p>
           </div>
 
           {/* Stories Bar */}
@@ -609,17 +723,17 @@ function ValentinaApp() {
 
           {/* Progress to next unlock */}
           <div className="mb-6 bg-zinc-900/50 rounded-xl p-4 border border-white/5">
-            {unlockedIndices.length - 2 < UNLOCK_THRESHOLDS.length ? (
+            {unlockedIndices.length - FREE_IMAGES + unlockedVideoIndices.length - FREE_VIDEOS < (VALENTINA_IMAGES.length - FREE_IMAGES + VALENTINA_VIDEOS.length - FREE_VIDEOS) ? (
               <>
                 <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center gap-2">
                     <div className="p-1 bg-cyan-500/20 rounded-md">
                       <Unlock size={12} className="text-cyan-400" />
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Próximo regalo exclusivo</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Próximo contenido: disponible en unos segundos</span>
                   </div>
                   <span className="text-[10px] text-[var(--accent)] font-mono bg-[var(--accent)]/10 px-2 py-0.5 rounded-full">
-                    {Math.max(0, Math.floor(UNLOCK_THRESHOLDS[unlockedIndices.length - 2] - timeSpent))}s
+                    {Math.max(0, Math.floor(((unlockedIndices.length - FREE_IMAGES + unlockedVideoIndices.length - FREE_VIDEOS + 1) * UNLOCK_INTERVAL) - timeSpent))}s
                   </span>
                 </div>
                 <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
@@ -627,11 +741,11 @@ function ValentinaApp() {
                     className="h-full bg-gradient-to-r from-[var(--accent)] to-rose-400"
                     initial={{ width: 0 }}
                     animate={{ 
-                      width: `${(timeSpent / UNLOCK_THRESHOLDS[unlockedIndices.length - 2]) * 100}%` 
+                      width: `${(timeSpent % UNLOCK_INTERVAL / UNLOCK_INTERVAL) * 100}%` 
                     }}
                   />
                 </div>
-                <p className="text-[9px] text-zinc-600 mt-2 text-center">Quédate un rato más para desbloquear contenido inédito de Valentina love69 🤫</p>
+                <p className="text-[9px] text-zinc-600 mt-2 text-center">Contenido gratuito. Solo espera unos segundos para disfrutarlo. ✨</p>
               </>
             ) : (
               <div className="flex flex-col items-center gap-2 py-1">
@@ -639,7 +753,7 @@ function ValentinaApp() {
                   <CheckCheck size={16} />
                   <span className="text-[10px] font-bold uppercase tracking-widest">¡Todos los regalos desbloqueados!</span>
                 </div>
-                <p className="text-[9px] text-zinc-500">Has visto todo el contenido exclusivo de esta sesión 🔥</p>
+                <p className="text-[9px] text-zinc-500">Has visto todo el contenido exclusivo de esta sesión ✨</p>
               </div>
             )}
           </div>
@@ -682,22 +796,23 @@ function ValentinaApp() {
                       </div>
                     </div>
                     <p className="text-sm text-zinc-300">
-                      {i === 0 ? "Me encantó cómo quedó esta sesión... ¿qué les parece? 🥺" : "Un adelanto de lo que se viene este fin de semana 🔥"}
+                      {i === 0 ? "Me encantó cómo quedó esta sesión... ¿qué les parece? ✨" : "Nueva sesión: detrás de cámaras 📸"}
                     </p>
                     <div className="relative aspect-[4/5] rounded-lg overflow-hidden bg-zinc-900 group cursor-pointer">
                       <img 
                         src={img} 
                         alt="Post" 
-                        className={`w-full h-full object-cover transition-all duration-700 ${!isUnlocked ? 'blur-md group-hover:blur-sm' : 'blur-0'}`}
+                        className={`w-full h-full object-cover transition-all duration-700 ${!isUnlocked ? 'blur-2xl grayscale scale-110' : 'blur-0'}`}
                         referrerPolicy="no-referrer"
                         onClick={() => isUnlocked && setSelectedImage(img)}
                       />
                       
                       {!isUnlocked && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
                           <Lock size={32} className="text-white/80 mb-2" />
-                          <p className="text-xs font-bold uppercase tracking-widest">Contenido Bloqueado</p>
-                          <p className="text-[10px] text-white/60 mt-1">Sigue en el sitio para desbloquear</p>
+                          <p className="text-xs font-bold uppercase tracking-widest">Contenido cargando...</p>
+                          <p className="text-[10px] text-white/60 mt-1">El contenido se desbloqueará automáticamente en {Math.max(0, Math.floor(((i - FREE_IMAGES + 1) * UNLOCK_INTERVAL) - timeSpent))}s ✨</p>
+                          <p className="text-[8px] text-white/40 mt-2 italic">Contenido gratuito. Solo espera unos segundos para disfrutarlo. ✨</p>
                         </div>
                       )}
                       
@@ -730,14 +845,20 @@ function ValentinaApp() {
                 {/* Video Post */}
                 {VALENTINA_VIDEOS.map((videoUrl, i) => {
                   const descriptions = [
-                    "¡Este es mi nuevo video favorito! Lo he puesto como principal para que no se lo pierdan 💖",
-                    "Les dejo este videito exclusivo por aquí... espero que les guste 💋",
-                    "Un adelanto de lo que se viene... ¿qué les parece? 🔥",
-                    "Este es de mis favoritos, me sentí súper cómoda grabándolo 🥺"
+                    "¡Este es mi nuevo video favorito! Lo he puesto como principal para que no se lo pierdan ✨",
+                    "Les dejo este videito exclusivo por aquí... espero que les guste 📸",
+                    "Nueva sesión: detrás de cámaras ✨",
+                    "Este es de mis favoritos, me sentí súper cómoda grabándolo ✨"
                   ];
                   const times = ["hace un momento", "hace 1 hora", "hace 3 horas", "hace 5 horas"];
                   const isMain = i === 0;
+                  const isUnlocked = unlockedVideoIndices.includes(i);
                   
+                  // Calculate time remaining for this video
+                  const lockableImagesCount = VALENTINA_IMAGES.length - FREE_IMAGES;
+                  const videoThreshold = (lockableImagesCount + i + (FREE_VIDEOS === 0 ? 1 : 0)) * UNLOCK_INTERVAL;
+                  const timeRemaining = Math.max(0, videoThreshold - timeSpent);
+
                   return (
                     <div key={i} className={`of-card p-4 space-y-3 ${isMain ? 'border-[var(--accent)]/30 bg-[var(--accent)]/5' : ''}`}>
                       <div className="flex items-center justify-between">
@@ -763,13 +884,22 @@ function ValentinaApp() {
                         {descriptions[i % descriptions.length]}
                       </p>
                       <div className={`relative aspect-[9/16] w-full max-w-[380px] mx-auto rounded-xl overflow-hidden bg-zinc-900 shadow-2xl ${isMain ? 'ring-2 ring-[var(--accent)]/50' : ''}`}>
-                        <iframe
-                          src={`${videoUrl}?autoplay=0&title=0&byline=0&portrait=0&badge=0&autopause=0&player_id=0&app_id=58479`}
-                          className="absolute inset-0 w-full h-full scale-[1.02]"
-                          frameBorder="0"
-                          allow="autoplay; fullscreen; picture-in-picture"
-                          allowFullScreen
-                        ></iframe>
+                        {isUnlocked ? (
+                          <iframe
+                            src={`${videoUrl}?autoplay=0&title=0&byline=0&portrait=0&badge=0&autopause=0&player_id=0&app_id=58479`}
+                            className="absolute inset-0 w-full h-full scale-[1.02]"
+                            frameBorder="0"
+                            allow="autoplay; fullscreen; picture-in-picture"
+                            allowFullScreen
+                          ></iframe>
+                        ) : (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md p-6 text-center">
+                            <Lock size={48} className="text-white/80 mb-4 animate-bounce" />
+                            <p className="text-sm font-bold uppercase tracking-widest text-white">Video Bloqueado</p>
+                            <p className="text-xs text-white/60 mt-2">Se desbloqueará automáticamente en {timeRemaining}s ✨</p>
+                            <p className="text-[10px] text-white/40 mt-4 italic">Sigue explorando para desbloquear todo el contenido gratuito. ✨</p>
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-6 pt-2">
                         <div className="flex items-center gap-1.5 text-zinc-400">
@@ -789,6 +919,9 @@ function ValentinaApp() {
                 <div className="grid grid-cols-3 gap-1">
                   {VALENTINA_IMAGES.map((img, i) => {
                     const isUnlocked = unlockedIndices.includes(i);
+                    const threshold = (i - FREE_IMAGES + 1) * UNLOCK_INTERVAL;
+                    const timeRemaining = Math.max(0, threshold - timeSpent);
+
                     return (
                       <div 
                         key={i} 
@@ -798,12 +931,13 @@ function ValentinaApp() {
                         <img 
                           src={img} 
                           alt="Media" 
-                          className={`w-full h-full object-cover transition-all duration-500 ${!isUnlocked ? 'blur-sm' : 'blur-0'}`}
+                          className={`w-full h-full object-cover transition-all duration-500 ${!isUnlocked ? 'blur-sm grayscale' : 'blur-0'}`}
                           referrerPolicy="no-referrer"
                         />
                         {!isUnlocked && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                            <Lock size={16} className="text-white/60" />
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                            <Lock size={16} className="text-white/80 mb-1" />
+                            <span className="text-[8px] font-bold text-white">{timeRemaining}s</span>
                           </div>
                         )}
                       </div>
@@ -813,6 +947,7 @@ function ValentinaApp() {
               </div>
             )}
           </div>
+          <Footer setView={setView} />
         </div>
       </main>
 
@@ -820,20 +955,30 @@ function ValentinaApp() {
       <AnimatePresence>
         {showUnlockNotification && (
           <motion.div 
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed bottom-20 left-4 right-4 z-[100] bg-[var(--accent)] text-white p-4 rounded-xl shadow-[0_0_30px_rgba(251,113,133,0.5)] flex items-center gap-3"
+            initial={{ opacity: 0, y: 100, scale: 0.5, rotate: -5 }}
+            animate={{ 
+              opacity: 1, 
+              y: 0, 
+              scale: 1, 
+              rotate: 0,
+              transition: {
+                type: "spring",
+                stiffness: 300,
+                damping: 20
+              }
+            }}
+            exit={{ opacity: 0, scale: 0.5, y: 50 }}
+            className="fixed bottom-24 left-4 right-4 z-[100] bg-gradient-to-r from-[var(--accent)] to-rose-400 text-white p-4 rounded-2xl shadow-[0_20px_50px_rgba(251,113,133,0.4)] flex items-center gap-4 border border-white/20"
           >
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-              <ImageIcon size={20} />
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
+              <Star size={24} className="text-white fill-white" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-bold">{showUnlockNotification}</p>
-              <p className="text-[10px] opacity-80">Valentina love69 acaba de compartir algo contigo.</p>
+              <p className="text-base font-black uppercase italic tracking-tighter leading-none mb-1">{showUnlockNotification}</p>
+              <p className="text-[10px] font-bold opacity-90 uppercase tracking-widest">¡Contenido exclusivo disponible ahora! ✨</p>
             </div>
-            <button onClick={() => setShowUnlockNotification(null)} className="p-1">
-              <ArrowLeft size={16} className="rotate-90" />
+            <button onClick={() => setShowUnlockNotification(null)} className="p-2 bg-black/20 rounded-full hover:bg-black/40 transition-colors">
+              <X size={16} />
             </button>
           </motion.div>
         )}
@@ -841,9 +986,20 @@ function ValentinaApp() {
 
       {/* Bottom Navigation Bar */}
       <footer className="glass fixed bottom-0 left-0 right-0 max-w-2xl mx-auto z-30 px-6 py-3 flex justify-between items-center">
-        <Home size={24} className="text-[var(--accent)]" />
-        <Bell size={24} className="text-white/60" />
-        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+        <Home 
+          size={24} 
+          className={view === 'profile' ? "text-[var(--accent)]" : "text-white/60"} 
+          onClick={() => setView('profile')}
+        />
+        <Bell 
+          size={24} 
+          className="text-white/60 cursor-pointer hover:text-white transition-colors" 
+          onClick={() => alert("¡Próximamente! ✨")}
+        />
+        <div 
+          className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors"
+          onClick={() => setActiveTab(activeTab === 'posts' ? 'media' : 'posts')}
+        >
           <Grid size={24} className="text-white/60" />
         </div>
         <MessageCircle 
@@ -851,7 +1007,11 @@ function ValentinaApp() {
           className={view === 'chat' ? "text-[var(--accent)]" : "text-white/60"} 
           onClick={() => setView('chat')}
         />
-        <User size={24} className="text-white/60" />
+        <User 
+          size={24} 
+          className="text-white/60 cursor-pointer hover:text-white transition-colors" 
+          onClick={() => setView('profile')}
+        />
       </footer>
 
       {/* Gallery Modal */}
