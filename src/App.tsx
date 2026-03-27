@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef, ReactNode, Component } from 'react';
+import React, { useState, useEffect, useRef, useMemo, ReactNode, Component } from 'react';
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Send, 
@@ -103,12 +103,25 @@ IMPORTANTE: Escribe siempre en español neutro natural. No uses negritas ni form
 `;
 
 const VALENTINA_IMAGES = [
-  "https://i.ibb.co/QF27K70b/image.jpg", // Profile
-  "https://i.ibb.co/cKCvtdbh/image.jpg", // Cover
-  "https://i.ibb.co/F4B21CdL/image.jpg",
-  "https://i.ibb.co/hF9nPCDC/image.jpg",
-  "https://i.ibb.co/QvxLrXVG/image.jpg",
-  "https://i.ibb.co/1GZpkc0Q/image.jpg"
+  "https://i.ibb.co/nN7LcPR8/image.jpg", // Profile
+  "https://i.ibb.co/mVLqLqm4/image.jpg", // Cover
+  "https://i.ibb.co/vCsKh6GY/image.jpg",
+  "https://i.ibb.co/gM7D7vcR/image.jpg",
+  "https://i.ibb.co/1GvrnDfy/image.jpg",
+  "https://i.ibb.co/JjpwGJjZ/image.jpg",
+  "https://i.ibb.co/4nLC6BQf/image.jpg",
+  "https://i.ibb.co/0pdf2x5R/image.jpg",
+  "https://i.ibb.co/NdxnyzGL/image.jpg",
+  "https://i.ibb.co/gZCKmHvw/image.jpg",
+  "https://i.ibb.co/8ngTkj44/image.jpg",
+  "https://i.ibb.co/VcnNxS92/image.jpg",
+  "https://i.ibb.co/SwfQgbLP/image.jpg",
+  "https://i.ibb.co/1JYB8qLK/image.jpg",
+  "https://i.ibb.co/TqJRqZmB/image.jpg",
+  "https://i.ibb.co/MkkrNXBd/image.jpg",
+  "https://i.ibb.co/0R9dFRWX/image.jpg",
+  "https://i.ibb.co/pB4z6WkG/image.jpg",
+  "https://i.ibb.co/rGSkFmvc/image.jpg"
 ];
 
 const VALENTINA_VIDEOS = [
@@ -119,17 +132,17 @@ const VALENTINA_VIDEOS = [
   "https://player.vimeo.com/video/1177488288"
 ];
 
-const UNLOCK_INTERVAL = 60; // 1 minute per item
-const FREE_IMAGE_INDICES = [0, 2]; // 1st and 3rd
-const FREE_VIDEO_INDICES = [0, 2]; // 1st and 3rd
+const UNLOCK_INTERVAL = 30; // 30 seconds per item
+const FREE_IMAGE_INDICES = [0, 1, 2]; // Profile, Cover, and 1st feed image
+const FREE_VIDEO_INDICES = [0]; // 1st video
 
 const Logo = ({ className = "" }: { className?: string }) => (
   <div className={`flex items-center gap-2 ${className}`}>
-    <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-rose-500/20 border border-white/10">
+    <div className="w-10 h-10 rounded-xl shadow-lg shadow-rose-500/20 border border-white/10 relative">
       <img 
         src="https://i.ibb.co/Kcrp5NxV/logo.png" 
         alt="Logo" 
-        className="w-full h-full object-cover"
+        className="w-full h-full object-contain rounded-xl"
         referrerPolicy="no-referrer"
         onError={(e) => {
           // Fallback if the direct link guess fails
@@ -244,6 +257,44 @@ function ValentinaApp() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Security: Block inspection and right-click
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Block F12
+      if (e.key === 'F12') {
+        e.preventDefault();
+      }
+      // Block Ctrl+Shift+I, J, C, K, M
+      if (e.ctrlKey && e.shiftKey && (['I', 'J', 'C', 'K', 'M'].includes(e.key.toUpperCase()))) {
+        e.preventDefault();
+      }
+      // Block Ctrl+U (View Source), Ctrl+S (Save), Ctrl+P (Print)
+      if (e.ctrlKey && (['U', 'S', 'P'].includes(e.key.toUpperCase()))) {
+        e.preventDefault();
+      }
+    };
+
+    const handleDragStart = (e: DragEvent) => {
+      if ((e.target as HTMLElement).tagName === 'IMG') {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('dragstart', handleDragStart);
+
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('dragstart', handleDragStart);
+    };
+  }, []);
+
   // Timer for retention
   useEffect(() => {
     const timer = setInterval(() => {
@@ -252,26 +303,59 @@ function ValentinaApp() {
     return () => clearInterval(timer);
   }, []);
 
-  // Unlock logic
-  useEffect(() => {
-    // Combine all lockable items into a single sequence
+  // Post descriptions for variety
+  const POST_DESCRIPTIONS = [
+    "Me encantó cómo quedó esta sesión... ¿qué les parece? ✨",
+    "Nueva sesión: detrás de cámaras 📸",
+    "Momentos de relax entre tomas... ☕️",
+    "Preparando algo muy especial para ustedes. Estén atentos. 🔥",
+    "La luz de hoy era simplemente perfecta. ☀️",
+    "Explorando nuevos estilos. ¿Les gusta este look? 👗",
+    "Un pequeño adelanto de lo que viene... 😉",
+    "A veces lo más simple es lo más bello. ✨",
+    "Día de producción intenso pero muy divertido. 🎬",
+    "Gracias por todo el apoyo, son los mejores. ❤️"
+  ];
+
+  // Memoized lockable items to ensure consistency
+  const allLockable = useMemo(() => {
     const lockableImages = VALENTINA_IMAGES.map((_, i) => ({ type: 'image', index: i })).filter(item => !FREE_IMAGE_INDICES.includes(item.index));
     const lockableVideos = VALENTINA_VIDEOS.map((_, i) => ({ type: 'video', index: i })).filter(item => !FREE_VIDEO_INDICES.includes(item.index));
-    const allLockable = [...lockableImages, ...lockableVideos];
+    
+    const items: { type: string, index: number }[] = [];
+    const maxLen = Math.max(lockableImages.length, lockableVideos.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (i < lockableImages.length) items.push(lockableImages[i]);
+      if (i < lockableVideos.length) items.push(lockableVideos[i]);
+    }
+    return items;
+  }, []);
 
+  // Unlock logic
+  useEffect(() => {
     allLockable.forEach((item, i) => {
       const threshold = (i + 1) * UNLOCK_INTERVAL;
       if (timeSpent >= threshold) {
-        if (item.type === 'image' && !unlockedIndices.includes(item.index)) {
-          setUnlockedIndices(prev => [...prev, item.index]);
-          triggerUnlockNotification(`¡Nueva foto desbloqueada! ✨`);
-        } else if (item.type === 'video' && !unlockedVideoIndices.includes(item.index)) {
-          setUnlockedVideoIndices(prev => [...prev, item.index]);
-          triggerUnlockNotification(`¡Nuevo video desbloqueado! 📸`);
+        if (item.type === 'image') {
+          setUnlockedIndices(prev => {
+            if (!prev.includes(item.index)) {
+              triggerUnlockNotification(`¡Nueva foto desbloqueada! ✨`);
+              return [...prev, item.index];
+            }
+            return prev;
+          });
+        } else if (item.type === 'video') {
+          setUnlockedVideoIndices(prev => {
+            if (!prev.includes(item.index)) {
+              triggerUnlockNotification(`¡Nuevo video desbloqueado! 📸`);
+              return [...prev, item.index];
+            }
+            return prev;
+          });
         }
       }
     });
-  }, [timeSpent, unlockedIndices, unlockedVideoIndices]);
+  }, [timeSpent, allLockable]);
 
   const triggerUnlockNotification = (message: string) => {
     setShowUnlockNotification(message);
@@ -408,8 +492,8 @@ function ValentinaApp() {
           )}
           {!isInitializing && messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full opacity-30 space-y-4">
-              <div className="w-20 h-20 rounded-full overflow-hidden border border-white/10">
-                <img src={VALENTINA_IMAGES[0]} alt="Valentina" className="w-full h-full object-cover grayscale" />
+              <div className="w-20 h-20 rounded-full border border-white/10 relative">
+                <img src={VALENTINA_IMAGES[0]} alt="Valentina" className="w-full h-full object-contain grayscale rounded-full" />
               </div>
               <div className="text-center">
                 <p className="text-xs font-bold uppercase tracking-widest">Valentina está en línea</p>
@@ -567,11 +651,11 @@ function ValentinaApp() {
       {/* Profile Content */}
       <main className="flex-1 overflow-y-auto no-scrollbar">
         {/* Cover Image */}
-        <div className="relative h-48 w-full overflow-hidden bg-zinc-900 group">
+        <div className="relative w-full bg-black group">
           <img 
             src={VALENTINA_IMAGES[1]} 
             alt="Cover" 
-            className="w-full h-full object-cover opacity-80"
+            className="relative w-full h-auto opacity-95 block"
             referrerPolicy="no-referrer"
           />
           {/* Strategic Chat Button on Cover */}
@@ -588,11 +672,11 @@ function ValentinaApp() {
         <div className="px-4 -mt-12 relative z-10">
           <div className="flex justify-between items-end mb-4">
             <div className="relative">
-              <div className="w-24 h-24 rounded-full border-4 border-black overflow-hidden bg-zinc-800">
+              <div className="w-24 h-24 rounded-full border-4 border-black bg-zinc-900 relative">
                 <img 
                   src={VALENTINA_IMAGES[0]} 
                   alt="Profile" 
-                  className="w-full h-full object-cover"
+                  className="relative w-full h-auto rounded-full block"
                   referrerPolicy="no-referrer"
                 />
               </div>
@@ -662,11 +746,11 @@ function ValentinaApp() {
                   onClick={() => isUnlocked ? setSelectedImage(img) : setShowGallery(true)}
                 >
                   <div className={`w-16 h-16 rounded-full p-[2px] ${isUnlocked ? 'bg-gradient-to-tr from-[var(--accent)] to-rose-300' : 'bg-zinc-800'}`}>
-                    <div className="w-full h-full rounded-full border-2 border-black overflow-hidden relative">
+                    <div className="w-full h-full rounded-full border-2 border-black relative">
                       <img 
                         src={img} 
                         alt={`Story ${i}`} 
-                        className={`w-full h-full object-cover transition-all ${!isUnlocked ? 'blur-md grayscale' : 'group-hover:scale-110'}`}
+                        className={`w-full h-full object-contain transition-all rounded-full ${!isUnlocked ? 'blur-md grayscale' : ''}`}
                         referrerPolicy="no-referrer"
                       />
                       {!isUnlocked && (
@@ -784,8 +868,8 @@ function ValentinaApp() {
                   <div key={i} className="of-card p-4 space-y-3">
                     <div className="flex items-center gap-3">
                       <div className="relative">
-                        <div className="w-10 h-10 rounded-full overflow-hidden">
-                          <img src={VALENTINA_IMAGES[0]} alt="Avatar" className="w-full h-full object-cover" />
+                        <div className="w-10 h-10 rounded-full">
+                          <img src={VALENTINA_IMAGES[0]} alt="Avatar" className="w-full h-full object-contain rounded-full" />
                         </div>
                         {/* Small online indicator */}
                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>
@@ -796,15 +880,14 @@ function ValentinaApp() {
                       </div>
                     </div>
                     <p className="text-sm text-zinc-300">
-                      {i === 0 ? "Me encantó cómo quedó esta sesión... ¿qué les parece? ✨" : "Nueva sesión: detrás de cámaras 📸"}
+                      {POST_DESCRIPTIONS[i % POST_DESCRIPTIONS.length]}
                     </p>
-                    <div className="relative aspect-[4/5] rounded-lg overflow-hidden bg-zinc-900 group cursor-pointer">
+                    <div className="relative rounded-lg bg-black group cursor-pointer" onClick={() => isUnlocked && setSelectedImage(img)}>
                       <img 
                         src={img} 
                         alt="Post" 
-                        className={`w-full h-full object-cover transition-all duration-700 ${!isUnlocked ? 'blur-2xl grayscale scale-110' : 'blur-0'}`}
+                        className={`relative w-full h-auto transition-all duration-700 block ${!isUnlocked ? 'blur-2xl grayscale' : 'blur-0'}`}
                         referrerPolicy="no-referrer"
-                        onClick={() => isUnlocked && setSelectedImage(img)}
                       />
                       
                       {!isUnlocked && (
@@ -813,10 +896,6 @@ function ValentinaApp() {
                           <p className="text-xs font-bold uppercase tracking-widest">Contenido cargando...</p>
                           {(() => {
                             const originalIndex = i + 2;
-                            const lockableImages = VALENTINA_IMAGES.map((_, idx) => ({ type: 'image', index: idx })).filter(item => !FREE_IMAGE_INDICES.includes(item.index));
-                            const lockableVideos = VALENTINA_VIDEOS.map((_, idx) => ({ type: 'video', index: idx })).filter(item => !FREE_VIDEO_INDICES.includes(item.index));
-                            const allLockable = [...lockableImages, ...lockableVideos];
-                            
                             const lockableIndex = allLockable.findIndex(item => item.type === 'image' && item.index === originalIndex);
                             const threshold = lockableIndex !== -1 ? (lockableIndex + 1) * UNLOCK_INTERVAL : 0;
                             const timeRemaining = Math.max(0, threshold - timeSpent);
@@ -869,7 +948,13 @@ function ValentinaApp() {
                   // Calculate time remaining for this video
                   const lockableImages = VALENTINA_IMAGES.map((_, idx) => ({ type: 'image', index: idx })).filter(item => !FREE_IMAGE_INDICES.includes(item.index));
                   const lockableVideos = VALENTINA_VIDEOS.map((_, idx) => ({ type: 'video', index: idx })).filter(item => !FREE_VIDEO_INDICES.includes(item.index));
-                  const allLockable = [...lockableImages, ...lockableVideos];
+                  
+                  const allLockable: { type: string, index: number }[] = [];
+                  const maxLen = Math.max(lockableImages.length, lockableVideos.length);
+                  for (let j = 0; j < maxLen; j++) {
+                    if (j < lockableImages.length) allLockable.push(lockableImages[j]);
+                    if (j < lockableVideos.length) allLockable.push(lockableVideos[j]);
+                  }
                   
                   const lockableIndex = allLockable.findIndex(item => item.type === 'video' && item.index === i);
                   const threshold = lockableIndex !== -1 ? (lockableIndex + 1) * UNLOCK_INTERVAL : 0;
@@ -880,8 +965,8 @@ function ValentinaApp() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="relative">
-                            <div className="w-10 h-10 rounded-full overflow-hidden">
-                              <img src={VALENTINA_IMAGES[0]} alt="Avatar" className="w-full h-full object-cover" />
+                            <div className="w-10 h-10 rounded-full">
+                              <img src={VALENTINA_IMAGES[0]} alt="Avatar" className="w-full h-full object-contain rounded-full" />
                             </div>
                             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>
                           </div>
@@ -899,11 +984,13 @@ function ValentinaApp() {
                       <p className="text-sm text-zinc-300">
                         {descriptions[i % descriptions.length]}
                       </p>
-                      <div className={`relative aspect-[9/16] w-full max-w-[380px] mx-auto rounded-xl overflow-hidden bg-zinc-900 shadow-2xl ${isMain ? 'ring-2 ring-[var(--accent)]/50' : ''}`}>
+                      <div className={`relative w-full max-w-[380px] mx-auto bg-black shadow-2xl ${isMain ? 'ring-2 ring-[var(--accent)]/50' : ''}`}>
+                        {/* Blurred background for video container */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-zinc-800 to-black opacity-50"></div>
                         {isUnlocked ? (
                           <iframe
                             src={`${videoUrl}?autoplay=0&title=0&byline=0&portrait=0&badge=0&autopause=0&player_id=0&app_id=58479`}
-                            className="absolute inset-0 w-full h-full scale-[1.02]"
+                            className="w-full aspect-[9/16] block"
                             frameBorder="0"
                             allow="autoplay; fullscreen; picture-in-picture"
                             allowFullScreen
@@ -936,11 +1023,6 @@ function ValentinaApp() {
                 <div className="grid grid-cols-3 gap-1">
                   {VALENTINA_IMAGES.map((img, i) => {
                     const isUnlocked = unlockedIndices.includes(i);
-                    // Find the threshold for this image if it's not free
-                    const lockableImages = VALENTINA_IMAGES.map((_, idx) => ({ type: 'image', index: idx })).filter(item => !FREE_IMAGE_INDICES.includes(item.index));
-                    const lockableVideos = VALENTINA_VIDEOS.map((_, idx) => ({ type: 'video', index: idx })).filter(item => !FREE_VIDEO_INDICES.includes(item.index));
-                    const allLockable = [...lockableImages, ...lockableVideos];
-                    
                     const lockableIndex = allLockable.findIndex(item => item.type === 'image' && item.index === i);
                     const threshold = lockableIndex !== -1 ? (lockableIndex + 1) * UNLOCK_INTERVAL : 0;
                     const timeRemaining = Math.max(0, threshold - timeSpent);
@@ -948,15 +1030,16 @@ function ValentinaApp() {
                     return (
                       <div 
                         key={i} 
-                        className="aspect-square relative bg-zinc-900 overflow-hidden cursor-pointer"
+                        className="relative bg-black cursor-pointer"
                         onClick={() => isUnlocked && setSelectedImage(img)}
                       >
                         <img 
                           src={img} 
                           alt="Media" 
-                          className={`w-full h-full object-cover transition-all duration-500 ${!isUnlocked ? 'blur-sm grayscale' : 'blur-0'}`}
+                          className={`relative w-full h-auto transition-all duration-500 block ${!isUnlocked ? 'blur-sm grayscale' : 'blur-0'}`}
                           referrerPolicy="no-referrer"
                         />
+                        
                         {!isUnlocked && (
                           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px]">
                             <Lock size={16} className="text-white/80 mb-1" />
@@ -978,19 +1061,17 @@ function ValentinaApp() {
       <AnimatePresence>
         {showUnlockNotification && (
           <motion.div 
-            initial={{ opacity: 0, y: 100, scale: 0.5, rotate: -5 }}
+            initial={{ opacity: 0, y: 100 }}
             animate={{ 
               opacity: 1, 
               y: 0, 
-              scale: 1, 
-              rotate: 0,
               transition: {
                 type: "spring",
                 stiffness: 300,
                 damping: 20
               }
             }}
-            exit={{ opacity: 0, scale: 0.5, y: 50 }}
+            exit={{ opacity: 0, y: 50 }}
             className="fixed bottom-24 left-4 right-4 z-[100] bg-gradient-to-r from-[var(--accent)] to-rose-400 text-white p-4 rounded-2xl shadow-[0_20px_50px_rgba(251,113,133,0.4)] flex items-center gap-4 border border-white/20"
           >
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
@@ -1056,11 +1137,6 @@ function ValentinaApp() {
             <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-2">
               {VALENTINA_IMAGES.map((img, i) => {
                 const isUnlocked = unlockedIndices.includes(i);
-                // Find the threshold for this image if it's not free
-                const lockableImages = VALENTINA_IMAGES.map((_, idx) => ({ type: 'image', index: idx })).filter(item => !FREE_IMAGE_INDICES.includes(item.index));
-                const lockableVideos = VALENTINA_VIDEOS.map((_, idx) => ({ type: 'video', index: idx })).filter(item => !FREE_VIDEO_INDICES.includes(item.index));
-                const allLockable = [...lockableImages, ...lockableVideos];
-                
                 const lockableIndex = allLockable.findIndex(item => item.type === 'image' && item.index === i);
                 const threshold = lockableIndex !== -1 ? (lockableIndex + 1) * UNLOCK_INTERVAL : 0;
                 const timeRemaining = Math.max(0, threshold - timeSpent);
@@ -1068,17 +1144,17 @@ function ValentinaApp() {
                 return (
                   <motion.div 
                     key={i}
-                    whileHover={isUnlocked ? { scale: 1.02 } : {}}
-                    whileTap={isUnlocked ? { scale: 0.98 } : {}}
-                    className="aspect-[3/4] rounded-xl overflow-hidden cursor-pointer bg-white/5 relative group"
+                    className="rounded-xl cursor-pointer bg-white/5 relative group"
                     onClick={() => isUnlocked && setSelectedImage(img)}
                   >
-                    <img 
-                      src={img} 
-                      alt={`Gallery ${i}`} 
-                      className={`w-full h-full object-cover transition-all duration-500 ${!isUnlocked ? 'blur-xl grayscale' : 'blur-0'}`}
-                      referrerPolicy="no-referrer"
-                    />
+                    <div className="relative">
+                      <img 
+                        src={img} 
+                        alt={`Gallery ${i}`} 
+                        className={`relative w-full h-auto transition-all duration-500 block ${!isUnlocked ? 'blur-xl grayscale' : 'blur-0'}`}
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
                     {!isUnlocked && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60">
                         <Lock size={20} className="text-white/40 mb-1" />
@@ -1098,16 +1174,16 @@ function ValentinaApp() {
       <AnimatePresence>
         {selectedImage && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] bg-black flex items-center justify-center p-4"
           >
             <div className="relative w-full h-full flex items-center justify-center" onClick={() => setSelectedImage(null)}>
               <img 
                 src={selectedImage} 
                 alt="Full view" 
-                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                className="w-full h-auto rounded-lg shadow-2xl"
                 referrerPolicy="no-referrer"
               />
               
