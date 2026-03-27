@@ -727,16 +727,21 @@ function ValentinaApp() {
                 <div 
                   key={i} 
                   className="shrink-0 cursor-pointer group flex flex-col items-center"
-                  onClick={() => setSelectedImage(img)}
+                  onClick={() => isUnlocked ? setSelectedImage(img) : null}
                 >
-                  <div className={`w-16 h-16 rounded-xl p-[2px] bg-gradient-to-tr from-[var(--accent)] to-rose-300`}>
+                  <div className={`w-16 h-16 rounded-xl p-[2px] ${isUnlocked ? 'bg-gradient-to-tr from-[var(--accent)] to-rose-300' : 'bg-zinc-800'}`}>
                     <div className="w-full h-full rounded-xl border-2 border-black relative overflow-visible">
                       <img 
                         src={img} 
                         alt={`Story ${i}`} 
-                        className={`w-full h-full object-contain transition-all rounded-xl`}
+                        className={`w-full h-full object-contain transition-all rounded-xl ${!isUnlocked ? 'blur-md opacity-50' : ''}`}
                         referrerPolicy="no-referrer"
                       />
+                      {!isUnlocked && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-xl">
+                          <Lock size={14} className="text-white/60" />
+                        </div>
+                      )}
                     </div>
                   </div>
                   <p className={`text-[9px] mt-1 font-medium text-white/80`}>
@@ -842,7 +847,12 @@ function ValentinaApp() {
           <div className="space-y-4 pb-20">
             {activeTab === 'posts' ? (
               VALENTINA_IMAGES.slice(2).map((img, i) => {
-                const isUnlocked = unlockedIndices.includes(i + 2);
+                const actualIndex = i + 2;
+                const isUnlocked = unlockedIndices.includes(actualIndex);
+                const lockableIndex = allLockable.findIndex(item => item.type === 'image' && item.index === actualIndex);
+                const threshold = lockableIndex !== -1 ? (lockableIndex + 1) * UNLOCK_INTERVAL : 0;
+                const timeRemaining = Math.max(0, threshold - timeSpent);
+                
                 return (
                   <div key={i} className="of-card p-4 space-y-3">
                     <div className="flex items-center gap-3">
@@ -861,13 +871,27 @@ function ValentinaApp() {
                     <p className="text-sm text-zinc-300">
                       {POST_DESCRIPTIONS[i % POST_DESCRIPTIONS.length]}
                     </p>
-                    <div className="relative bg-black group cursor-pointer overflow-visible" onClick={() => setSelectedImage(img)}>
+                    <div className="relative bg-black group cursor-pointer overflow-visible" onClick={() => isUnlocked ? setSelectedImage(img) : null}>
                       <img 
                         src={img} 
                         alt="Post" 
-                        className={`relative w-full h-auto transition-all duration-700 block`}
+                        className={`relative w-full h-auto transition-all duration-700 block ${!isUnlocked ? 'blur-2xl opacity-40 scale-105' : 'group-hover:scale-105'}`}
                         referrerPolicy="no-referrer"
                       />
+                      
+                      {!isUnlocked && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 z-10">
+                          <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mb-3 border border-white/20 backdrop-blur-md">
+                            <Lock size={28} className="text-white/80" />
+                          </div>
+                          <p className="text-xs font-black text-white uppercase tracking-[0.2em] mb-1">
+                            Contenido Exclusivo
+                          </p>
+                          <p className="text-[10px] text-zinc-400 font-medium">
+                            Se desbloquea automáticamente en {timeRemaining}s
+                          </p>
+                        </div>
+                      )}
                       
                       {/* Strategic Chat Button on Image */}
                       <button 
@@ -951,12 +975,32 @@ function ValentinaApp() {
                         <div className="absolute inset-0 bg-gradient-to-b from-zinc-800 to-black opacity-50"></div>
                         <iframe
                           src={`${videoUrl}?autoplay=0&title=0&byline=0&portrait=0&badge=0&autopause=0&player_id=0&app_id=58479`}
-                          className="w-full aspect-[9/16] block"
+                          className={`w-full aspect-[9/16] block ${!isUnlocked ? 'blur-2xl opacity-0' : ''}`}
                           frameBorder="0"
                           allow="autoplay; fullscreen; picture-in-picture"
                           allowFullScreen
                           sandbox="allow-scripts allow-same-origin allow-presentation"
                         ></iframe>
+                        
+                        {!isUnlocked && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-xl z-10">
+                            <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4 border border-white/20">
+                              <Lock size={32} className="text-white/80" />
+                            </div>
+                            <p className="text-sm font-black text-white uppercase tracking-[0.3em] mb-2">
+                              Video Bloqueado
+                            </p>
+                            <p className="text-xs text-zinc-400 font-medium mb-4">
+                              Desbloqueo automático en {timeRemaining}s
+                            </p>
+                            <div className="w-32 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-[var(--accent)] transition-all duration-1000"
+                                style={{ width: `${(timeSpent % UNLOCK_INTERVAL / UNLOCK_INTERVAL) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-6 pt-2">
                         <div className="flex items-center gap-1.5 text-zinc-400">
@@ -984,15 +1028,32 @@ function ValentinaApp() {
                       <div 
                         key={i} 
                         className="galeria-item relative bg-black cursor-pointer"
-                        onClick={() => setSelectedImage(img)}
+                        onClick={() => isUnlocked ? setSelectedImage(img) : null}
                       >
                         <img 
                           src={img} 
                           alt={`Sesión fotográfica ${i + 1}`}
                           loading="lazy"
-                          className="transition-all duration-500 bg-zinc-900/30"
+                          className={`transition-all duration-500 bg-zinc-900/30 ${!isUnlocked ? 'blur-xl opacity-50 scale-110' : 'hover:scale-105'}`}
                           referrerPolicy="no-referrer"
                         />
+                        
+                        {!isUnlocked && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm z-10">
+                            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2 border border-white/20">
+                              <Lock size={24} className="text-white/80" />
+                            </div>
+                            <p className="text-[10px] font-black text-white uppercase tracking-widest">
+                              Desbloquea en {timeRemaining}s
+                            </p>
+                            <div className="mt-2 w-16 h-1 bg-white/10 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-[var(--accent)] transition-all duration-1000"
+                                style={{ width: `${(timeSpent % UNLOCK_INTERVAL / UNLOCK_INTERVAL) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
