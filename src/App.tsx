@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef, Component, ReactNode } from 'react';
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
+import React, { useState, useEffect, useRef, ReactNode, Component } from 'react';
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Send, 
@@ -31,9 +30,36 @@ import {
 } from "lucide-react";
 
 // Initialize Gemini
-const getAI = () => {
-  const apiKey = process.env.GEMINI_API_KEY || "";
-  return new GoogleGenAI({ apiKey });
+const sendMessageToGemini = async (message: string, chatHistory: Message[]) => {
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        message, 
+        history: [
+          { role: 'model', content: VALENTINA_SYSTEM_INSTRUCTION },
+          ...chatHistory.map(msg => ({
+            role: msg.role === 'user' ? 'user' : 'model',
+            content: msg.text
+          }))
+        ]
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Error en la solicitud');
+    }
+    
+    return data.message;
+  } catch (error) {
+    console.error('Error llamando a Gemini:', error);
+    return 'Lo siento, hubo un error. Por favor intenta de nuevo.';
+  }
 };
 
 interface Message {
@@ -113,61 +139,9 @@ const Logo = ({ className = "" }: { className?: string }) => (
   </div>
 );
 
-interface ErrorBoundaryProps {
-  children: ReactNode;
-}
-
-interface ErrorBoundaryState {
-  hasError: boolean;
-  error?: Error;
-}
-
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  state: ErrorBoundaryState = { hasError: false };
-
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: any) {
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-20 h-20 bg-rose-500/20 rounded-full flex items-center justify-center mb-6">
-            <ArrowLeft size={40} className="text-rose-500" />
-          </div>
-          <h1 className="text-2xl font-bold mb-4">¡Ay, algo salió mal! 🙄</h1>
-          <p className="text-zinc-400 mb-8 max-w-md">
-            Parece que Valentina se quedó sin señal o algo se rompió. Intenta recargar la página.
-          </p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="of-button-primary px-8 py-3"
-          >
-            Recargar página
-          </button>
-          {import.meta.env.DEV && (
-            <pre className="mt-8 p-4 bg-zinc-900 rounded text-left text-xs overflow-auto max-w-full text-rose-400">
-              {this.state.error?.toString()}
-            </pre>
-          )}
-        </div>
-      );
-    }
-
-    return (this as any).props.children;
-  }
-}
-
 export default function App() {
   return (
-    <ErrorBoundary>
-      <ValentinaApp />
-    </ErrorBoundary>
+    <ValentinaApp />
   );
 }
 
@@ -187,7 +161,6 @@ function ValentinaApp() {
   const [showUnlockNotification, setShowUnlockNotification] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatRef = useRef<any>(null);
 
   // Timer for retention
   useEffect(() => {
@@ -213,42 +186,7 @@ function ValentinaApp() {
     });
   }, [timeSpent, unlockedIndices]);
 
-  // Initialize chat if not already done
-  const initChat = async () => {
-    if (!chatRef.current && !isInitializing) {
-      setIsInitializing(true);
-      const apiKey = process.env.GEMINI_API_KEY;
-      
-      console.log("Initializing chat. API Key present:", !!apiKey);
-      
-      if (!apiKey) {
-        console.error("GEMINI_API_KEY is missing. Chat will not function.");
-        setIsInitializing(false);
-        return;
-      }
-
-      try {
-        const ai = getAI();
-        chatRef.current = ai.chats.create({
-          model: "gemini-3-flash-preview",
-          config: {
-            systemInstruction: VALENTINA_SYSTEM_INSTRUCTION,
-            temperature: 0.9,
-            topP: 0.95,
-          },
-        });
-        console.log("Chat initialized successfully");
-      } catch (error) {
-        console.error("Failed to initialize chat:", error);
-        chatRef.current = null;
-      } finally {
-        setIsInitializing(false);
-      }
-    }
-  };
-
   useEffect(() => {
-    initChat();
     // Add welcome message if empty
     if (messages.length === 0) {
       setMessages([{
@@ -273,22 +211,6 @@ function ValentinaApp() {
   const handleSend = async () => {
     if (!inputValue.trim() || isTyping) return;
 
-    // Ensure chat is initialized
-    if (!chatRef.current) {
-      initChat();
-    }
-
-    if (!chatRef.current) {
-      const errorMessage: Message = {
-        id: Date.now().toString(),
-        role: 'model',
-        text: "ay, se me trabó el cel... ¿qué me decías? 🙄 (Error: No se pudo conectar con Valentina. Verifica tu conexión o configuración)",
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
-      return;
-    }
-
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -301,11 +223,9 @@ function ValentinaApp() {
     setIsTyping(true);
 
     try {
-      const response: GenerateContentResponse = await chatRef.current.sendMessage({
-        message: inputValue
-      });
-
-      const fullText = response.text || "";
+      const reply = await sendMessageToGemini(inputValue, messages);
+      
+      const fullText = reply || "";
       if (!fullText.trim()) {
         throw new Error("Empty response from AI");
       }
@@ -345,8 +265,6 @@ function ValentinaApp() {
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      // Reset chat on error to try and recover
-      chatRef.current = null;
       
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
