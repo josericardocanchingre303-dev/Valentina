@@ -120,8 +120,8 @@ const VALENTINA_VIDEOS = [
 ];
 
 const UNLOCK_INTERVAL = 60; // 1 minute per item
-const FREE_IMAGES = 2; // Profile and Cover
-const FREE_VIDEOS = 0; // All videos locked by default or maybe the first one? Let's say all locked for now as requested.
+const FREE_IMAGE_INDICES = [0, 2]; // 1st and 3rd
+const FREE_VIDEO_INDICES = [0, 2]; // 1st and 3rd
 
 const Logo = ({ className = "" }: { className?: string }) => (
   <div className={`flex items-center gap-2 ${className}`}>
@@ -237,9 +237,9 @@ function ValentinaApp() {
   const [isTyping, setIsTyping] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [unlockedVideoIndices, setUnlockedVideoIndices] = useState<number[]>([]);
+  const [unlockedVideoIndices, setUnlockedVideoIndices] = useState<number[]>(FREE_VIDEO_INDICES);
   const [timeSpent, setTimeSpent] = useState(0);
-  const [unlockedIndices, setUnlockedIndices] = useState<number[]>([0, 1]); // Profile and Cover always unlocked
+  const [unlockedIndices, setUnlockedIndices] = useState<number[]>(FREE_IMAGE_INDICES);
   const [showUnlockNotification, setShowUnlockNotification] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -255,8 +255,8 @@ function ValentinaApp() {
   // Unlock logic
   useEffect(() => {
     // Combine all lockable items into a single sequence
-    const lockableImages = VALENTINA_IMAGES.map((_, i) => ({ type: 'image', index: i })).slice(FREE_IMAGES);
-    const lockableVideos = VALENTINA_VIDEOS.map((_, i) => ({ type: 'video', index: i })).slice(FREE_VIDEOS);
+    const lockableImages = VALENTINA_IMAGES.map((_, i) => ({ type: 'image', index: i })).filter(item => !FREE_IMAGE_INDICES.includes(item.index));
+    const lockableVideos = VALENTINA_VIDEOS.map((_, i) => ({ type: 'video', index: i })).filter(item => !FREE_VIDEO_INDICES.includes(item.index));
     const allLockable = [...lockableImages, ...lockableVideos];
 
     allLockable.forEach((item, i) => {
@@ -723,7 +723,7 @@ function ValentinaApp() {
 
           {/* Progress to next unlock */}
           <div className="mb-6 bg-zinc-900/50 rounded-xl p-4 border border-white/5">
-            {unlockedIndices.length - FREE_IMAGES + unlockedVideoIndices.length - FREE_VIDEOS < (VALENTINA_IMAGES.length - FREE_IMAGES + VALENTINA_VIDEOS.length - FREE_VIDEOS) ? (
+            {unlockedIndices.length + unlockedVideoIndices.length < (VALENTINA_IMAGES.length + VALENTINA_VIDEOS.length) ? (
               <>
                 <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center gap-2">
@@ -733,7 +733,7 @@ function ValentinaApp() {
                     <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Próximo contenido: disponible en unos segundos</span>
                   </div>
                   <span className="text-[10px] text-[var(--accent)] font-mono bg-[var(--accent)]/10 px-2 py-0.5 rounded-full">
-                    {Math.max(0, Math.floor(((unlockedIndices.length - FREE_IMAGES + unlockedVideoIndices.length - FREE_VIDEOS + 1) * UNLOCK_INTERVAL) - timeSpent))}s
+                    {Math.max(0, Math.floor(((unlockedIndices.length + unlockedVideoIndices.length - FREE_IMAGE_INDICES.length - FREE_VIDEO_INDICES.length + 1) * UNLOCK_INTERVAL) - timeSpent))}s
                   </span>
                 </div>
                 <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
@@ -811,7 +811,19 @@ function ValentinaApp() {
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
                           <Lock size={32} className="text-white/80 mb-2" />
                           <p className="text-xs font-bold uppercase tracking-widest">Contenido cargando...</p>
-                          <p className="text-[10px] text-white/60 mt-1">El contenido se desbloqueará automáticamente en {Math.max(0, Math.floor(((i - FREE_IMAGES + 1) * UNLOCK_INTERVAL) - timeSpent))}s ✨</p>
+                          {(() => {
+                            const originalIndex = i + 2;
+                            const lockableImages = VALENTINA_IMAGES.map((_, idx) => ({ type: 'image', index: idx })).filter(item => !FREE_IMAGE_INDICES.includes(item.index));
+                            const lockableVideos = VALENTINA_VIDEOS.map((_, idx) => ({ type: 'video', index: idx })).filter(item => !FREE_VIDEO_INDICES.includes(item.index));
+                            const allLockable = [...lockableImages, ...lockableVideos];
+                            
+                            const lockableIndex = allLockable.findIndex(item => item.type === 'image' && item.index === originalIndex);
+                            const threshold = lockableIndex !== -1 ? (lockableIndex + 1) * UNLOCK_INTERVAL : 0;
+                            const timeRemaining = Math.max(0, threshold - timeSpent);
+                            return (
+                              <p className="text-[10px] text-white/60 mt-1">El contenido se desbloqueará automáticamente en {timeRemaining}s ✨</p>
+                            );
+                          })()}
                           <p className="text-[8px] text-white/40 mt-2 italic">Contenido gratuito. Solo espera unos segundos para disfrutarlo. ✨</p>
                         </div>
                       )}
@@ -855,9 +867,13 @@ function ValentinaApp() {
                   const isUnlocked = unlockedVideoIndices.includes(i);
                   
                   // Calculate time remaining for this video
-                  const lockableImagesCount = VALENTINA_IMAGES.length - FREE_IMAGES;
-                  const videoThreshold = (lockableImagesCount + i + (FREE_VIDEOS === 0 ? 1 : 0)) * UNLOCK_INTERVAL;
-                  const timeRemaining = Math.max(0, videoThreshold - timeSpent);
+                  const lockableImages = VALENTINA_IMAGES.map((_, idx) => ({ type: 'image', index: idx })).filter(item => !FREE_IMAGE_INDICES.includes(item.index));
+                  const lockableVideos = VALENTINA_VIDEOS.map((_, idx) => ({ type: 'video', index: idx })).filter(item => !FREE_VIDEO_INDICES.includes(item.index));
+                  const allLockable = [...lockableImages, ...lockableVideos];
+                  
+                  const lockableIndex = allLockable.findIndex(item => item.type === 'video' && item.index === i);
+                  const threshold = lockableIndex !== -1 ? (lockableIndex + 1) * UNLOCK_INTERVAL : 0;
+                  const timeRemaining = Math.max(0, threshold - timeSpent);
 
                   return (
                     <div key={i} className={`of-card p-4 space-y-3 ${isMain ? 'border-[var(--accent)]/30 bg-[var(--accent)]/5' : ''}`}>
@@ -891,6 +907,7 @@ function ValentinaApp() {
                             frameBorder="0"
                             allow="autoplay; fullscreen; picture-in-picture"
                             allowFullScreen
+                            sandbox="allow-scripts allow-same-origin allow-presentation"
                           ></iframe>
                         ) : (
                           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md p-6 text-center">
@@ -919,7 +936,13 @@ function ValentinaApp() {
                 <div className="grid grid-cols-3 gap-1">
                   {VALENTINA_IMAGES.map((img, i) => {
                     const isUnlocked = unlockedIndices.includes(i);
-                    const threshold = (i - FREE_IMAGES + 1) * UNLOCK_INTERVAL;
+                    // Find the threshold for this image if it's not free
+                    const lockableImages = VALENTINA_IMAGES.map((_, idx) => ({ type: 'image', index: idx })).filter(item => !FREE_IMAGE_INDICES.includes(item.index));
+                    const lockableVideos = VALENTINA_VIDEOS.map((_, idx) => ({ type: 'video', index: idx })).filter(item => !FREE_VIDEO_INDICES.includes(item.index));
+                    const allLockable = [...lockableImages, ...lockableVideos];
+                    
+                    const lockableIndex = allLockable.findIndex(item => item.type === 'image' && item.index === i);
+                    const threshold = lockableIndex !== -1 ? (lockableIndex + 1) * UNLOCK_INTERVAL : 0;
                     const timeRemaining = Math.max(0, threshold - timeSpent);
 
                     return (
@@ -1033,6 +1056,15 @@ function ValentinaApp() {
             <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-2">
               {VALENTINA_IMAGES.map((img, i) => {
                 const isUnlocked = unlockedIndices.includes(i);
+                // Find the threshold for this image if it's not free
+                const lockableImages = VALENTINA_IMAGES.map((_, idx) => ({ type: 'image', index: idx })).filter(item => !FREE_IMAGE_INDICES.includes(item.index));
+                const lockableVideos = VALENTINA_VIDEOS.map((_, idx) => ({ type: 'video', index: idx })).filter(item => !FREE_VIDEO_INDICES.includes(item.index));
+                const allLockable = [...lockableImages, ...lockableVideos];
+                
+                const lockableIndex = allLockable.findIndex(item => item.type === 'image' && item.index === i);
+                const threshold = lockableIndex !== -1 ? (lockableIndex + 1) * UNLOCK_INTERVAL : 0;
+                const timeRemaining = Math.max(0, threshold - timeSpent);
+
                 return (
                   <motion.div 
                     key={i}
@@ -1051,6 +1083,7 @@ function ValentinaApp() {
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60">
                         <Lock size={20} className="text-white/40 mb-1" />
                         <span className="text-[8px] font-bold uppercase tracking-tighter text-white/40">Bloqueado</span>
+                        <span className="text-[8px] text-white/40 mt-1">{timeRemaining}s</span>
                       </div>
                     )}
                   </motion.div>
