@@ -104,7 +104,7 @@ IMPORTANTE: Escribe siempre en español neutro natural. No uses negritas ni form
 
 const VALENTINA_IMAGES = [
   "https://i.ibb.co/nN7LcPR8/image.jpg", // Profile
-  "https://i.ibb.co/mVLqLqm4/image.jpg", // Cover
+  "https://i.ibb.co/Q37Z4vb6/image.jpg", // Cover
   "https://i.ibb.co/vCsKh6GY/image.jpg",
   "https://i.ibb.co/gM7D7vcR/image.jpg",
   "https://i.ibb.co/1GvrnDfy/image.jpg",
