@@ -168,77 +168,83 @@ const Logo = ({ className = "" }: { className?: string }) => (
   </div>
 );
 
-const PrivacyPolicy = ({ onBack, setView }: { onBack: () => void, setView: (v: any) => void }) => (
-  <div className="flex flex-col min-h-screen bg-black text-white">
-    <div className="p-6 flex-1">
-      <button onClick={onBack} className="flex items-center gap-2 text-zinc-400 mb-8 hover:text-white transition-colors">
-        <ArrowLeft size={20} />
-        <span>Volver</span>
-      </button>
-      
-      <h1 className="text-3xl font-black italic uppercase tracking-tighter mb-2">Política de Privacidad</h1>
-      <p className="text-zinc-500 text-xs mb-8">Última actualización: marzo 2026</p>
-      
-      <div className="space-y-8 text-sm text-zinc-300 leading-relaxed">
-        <p>
-          En Valentina Love69 (en adelante, "el sitio"), valoramos tu privacidad y nos comprometemos a proteger tus datos personales. Esta política explica qué información recopilamos y cómo la utilizamos.
-        </p>
+const PrivacyPolicy = ({ onBack, setView }: { onBack: () => void, setView: (v: any) => void }) => {
+  const handleReset = () => {
+    if (window.confirm("¿Estás seguro de que quieres reiniciar tu progreso? Esto borrará tus mensajes y desbloqueos.")) {
+      localStorage.removeItem('valentina_love69_v1');
+      window.location.reload();
+    }
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen bg-black text-white">
+      <div className="p-6 flex-1">
+        <button onClick={onBack} className="flex items-center gap-2 text-zinc-400 mb-8 hover:text-white transition-colors">
+          <ArrowLeft size={20} />
+          <span>Volver</span>
+        </button>
         
-        <section>
-          <h2 className="text-lg font-bold text-white mb-3">1. Información que recopilamos</h2>
-          <ul className="list-disc pl-5 space-y-2">
-            <li><strong>Datos de uso</strong>: Recopilamos información sobre tu interacción con el sitio, como tiempo de permanencia, páginas visitadas y uso del chat, para mejorar la experiencia del usuario.</li>
-            <li><strong>Cookies</strong>: Utilizamos cookies para recordar tus preferencias y mostrar contenido relevante. Puedes desactivarlas en la configuración de tu navegador.</li>
-            <li><strong>Anuncios</strong>: El sitio puede mostrar anuncios de terceros que utilizan cookies para personalizar el contenido publicitario.</li>
-          </ul>
-        </section>
+        <h1 className="text-3xl font-black italic uppercase tracking-tighter mb-2">Política de Privacidad</h1>
+        <p className="text-zinc-400 text-xs mb-8">Última actualización: marzo 2026</p>
         
-        <section>
-          <h2 className="text-lg font-bold text-white mb-3">2. Uso de la información</h2>
-          <p className="mb-3">La información recopilada se utiliza para:</p>
-          <ul className="list-disc pl-5 space-y-2">
-            <li>Mejorar el contenido y la funcionalidad del sitio.</li>
-            <li>Analizar tendencias de uso y optimizar la retención de usuarios.</li>
-            <li>Cumplir con requisitos legales y de plataformas publicitarias.</li>
-          </ul>
-        </section>
-        
-        <section>
-          <h2 className="text-lg font-bold text-white mb-3">3. Datos del chat</h2>
+        <div className="space-y-8 text-sm text-zinc-300 leading-relaxed">
           <p>
-            Las conversaciones con nuestra asistente IA son anónimas y no se almacenan de forma identificable. No compartimos el historial de conversaciones con terceros.
+            En Valentina Love69 (en adelante, "el sitio"), valoramos tu privacidad y nos comprometemos a proteger tus datos personales. Esta política explica qué información recopilamos y cómo la utilizamos.
           </p>
-        </section>
-        
-        <section>
-          <h2 className="text-lg font-bold text-white mb-3">4. Tus derechos</h2>
-          <p>
-            Puedes contactarnos en cualquier momento para solicitar la eliminación de tus datos o para obtener más información sobre cómo manejamos tu privacidad.
-          </p>
-        </section>
-        
-        <section>
-          <h2 className="text-lg font-bold text-white mb-3">5. Contacto</h2>
-          <p>
-            Correo electrónico: <span className="text-[var(--accent)]">valentinalove69@gmail.com</span>
-          </p>
-        </section>
+          
+          <section>
+            <h2 className="text-lg font-bold text-white mb-3">1. Información que recopilamos</h2>
+            <ul className="list-disc pl-5 space-y-2">
+              <li><strong>Datos de uso</strong>: Recopilamos información sobre tu interacción con el sitio, como tiempo de permanencia, páginas visitadas y uso del chat, para mejorar la experiencia del usuario.</li>
+              <li><strong>Cookies</strong>: Utilizamos cookies para recordar tus preferencias y mostrar contenido relevante. Puedes desactivarlas en la configuración de tu navegador.</li>
+              <li><strong>Anuncios</strong>: El sitio puede mostrar anuncios de terceros que utilizan cookies para personalizar el contenido publicitario.</li>
+            </ul>
+          </section>
+          
+          <section>
+            <h2 className="text-lg font-bold text-white mb-3">2. Uso de la información</h2>
+            <p className="mb-3">La información recopilada se utiliza para:</p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>Mejorar el contenido y la funcionalidad del sitio.</li>
+              <li>Analizar tendencias de uso y optimizar la retención de usuarios.</li>
+              <li>Cumplir con requisitos legales y de plataformas publicitarias.</li>
+            </ul>
+          </section>
+          
+          <section>
+            <h2 className="text-lg font-bold text-white mb-3">3. Datos del chat</h2>
+            <p>
+              Las conversaciones con nuestra asistente IA son anónimas y no se almacenan de forma identificable. No compartimos el historial de conversaciones con terceros.
+            </p>
+          </section>
+          
+          <section className="pt-8 border-t border-white/10">
+            <h2 className="text-lg font-bold text-rose-500 mb-3 uppercase tracking-tighter italic">Zona de Control</h2>
+            <p className="text-zinc-400 text-xs mb-4">Si experimentas algún problema con la carga de contenido o quieres empezar de cero, puedes reiniciar la aplicación aquí.</p>
+            <button 
+              onClick={handleReset}
+              className="w-full py-4 rounded-xl border border-rose-500/30 bg-rose-500/5 text-rose-500 font-bold uppercase tracking-widest text-xs hover:bg-rose-500 hover:text-white transition-all"
+            >
+              Reiniciar Experiencia y Progreso
+            </button>
+          </section>
+        </div>
       </div>
+      <Footer setView={setView} />
     </div>
-    <Footer setView={setView} />
-  </div>
-);
+  );
+};
 
 const Footer = ({ setView }: { setView: (v: any) => void }) => (
   <footer className="bg-zinc-900/50 border-t border-white/5 p-8 mt-12 text-center space-y-6">
     <div className="flex justify-center gap-6">
-      <button onClick={() => setView('privacy')} className="text-xs text-zinc-500 hover:text-white transition-colors">Política de Privacidad</button>
-      <a href="mailto:valentinalove69@gmail.com" className="text-xs text-zinc-500 hover:text-white transition-colors">Contacto</a>
-      <button onClick={() => setView('privacy')} className="text-xs text-zinc-500 hover:text-white transition-colors">Términos de Uso</button>
+      <button onClick={() => setView('privacy')} className="text-xs text-zinc-400 hover:text-white transition-colors">Política de Privacidad</button>
+      <a href="mailto:valentinalove69@gmail.com" className="text-xs text-zinc-400 hover:text-white transition-colors">Contacto</a>
+      <button onClick={() => setView('privacy')} className="text-xs text-zinc-400 hover:text-white transition-colors">Términos de Uso</button>
     </div>
     <div className="space-y-2">
       <Logo className="justify-center" />
-      <p className="text-[10px] text-zinc-600 uppercase tracking-[0.2em]">© 2026 Valentina Love69. Todos los derechos reservados.</p>
+      <p className="text-[10px] text-zinc-500 uppercase tracking-[0.2em]">© 2026 Valentina Love69. Todos los derechos reservados.</p>
     </div>
   </footer>
 );
@@ -249,22 +255,46 @@ export default function App() {
   );
 }
 
+const STORAGE_KEY = 'valentina_love69_v1';
+
 function ValentinaApp() {
-  const [showAgeVerification, setShowAgeVerification] = useState(true);
-  const [isSubscribed, setIsSubscribed] = useState(false);
+  // Load initial state from localStorage
+  const getInitialState = () => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          ...parsed,
+          messages: parsed.messages.map((m: any) => ({
+            ...m,
+            timestamp: new Date(m.timestamp)
+          }))
+        };
+      } catch (e) {
+        console.error("Error parsing saved state:", e);
+      }
+    }
+    return null;
+  };
+
+  const initialState = getInitialState();
+
+  const [showAgeVerification, setShowAgeVerification] = useState(initialState ? false : true);
+  const [isSubscribed, setIsSubscribed] = useState(initialState?.isSubscribed ?? false);
   const [isInitializing, setIsInitializing] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+  const [isLiked, setIsLiked] = useState(initialState?.isLiked ?? false);
   const [view, setView] = useState<'profile' | 'chat' | 'privacy'>('profile');
   const [activeTab, setActiveTab] = useState<'posts' | 'media'>('posts');
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(initialState?.messages ?? []);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [unlockedVideoIndices, setUnlockedVideoIndices] = useState<number[]>(FREE_VIDEO_INDICES);
-  const [timeSpent, setTimeSpent] = useState(0);
-  const [unlockedIndices, setUnlockedIndices] = useState<number[]>(FREE_IMAGE_INDICES);
-  const [isChatUnlocked, setIsChatUnlocked] = useState(false);
+  const [unlockedVideoIndices, setUnlockedVideoIndices] = useState<number[]>(initialState?.unlockedVideoIndices ?? FREE_VIDEO_INDICES);
+  const [timeSpent, setTimeSpent] = useState(initialState?.timeSpent ?? 0);
+  const [unlockedIndices, setUnlockedIndices] = useState<number[]>(initialState?.unlockedIndices ?? FREE_IMAGE_INDICES);
+  const [isChatUnlocked, setIsChatUnlocked] = useState(initialState?.isChatUnlocked ?? false);
   const [showUnlockNotification, setShowUnlockNotification] = useState<{
     message: string;
     type: 'image' | 'video' | 'chat';
@@ -272,6 +302,20 @@ function ValentinaApp() {
   } | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Persistence logic
+  useEffect(() => {
+    const stateToSave = {
+      isSubscribed,
+      isLiked,
+      messages,
+      unlockedVideoIndices,
+      timeSpent,
+      unlockedIndices,
+      isChatUnlocked
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+  }, [isSubscribed, isLiked, messages, unlockedVideoIndices, timeSpent, unlockedIndices, isChatUnlocked]);
 
   // Protection logic
   useEffect(() => {
@@ -546,14 +590,17 @@ function ValentinaApp() {
 
           {isTyping && (
             <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
               className="flex justify-start"
             >
-              <div className="valentina-bubble px-4 py-3 flex gap-1 items-center">
-                <span className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                <span className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                <span className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce"></span>
+              <div className="valentina-bubble px-4 py-3 flex flex-col gap-2">
+                <div className="flex gap-1 items-center">
+                  <span className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                  <span className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                  <span className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-bounce"></span>
+                </div>
+                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest animate-pulse">Valentina está escribiendo...</p>
               </div>
             </motion.div>
           )}
