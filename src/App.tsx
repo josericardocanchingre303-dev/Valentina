@@ -143,6 +143,7 @@ const VALENTINA_VIDEOS = [
 ];
 
 const UNLOCK_INTERVAL = 30; // 30 seconds per item
+const CHAT_UNLOCK_THRESHOLD = 60; // 60 seconds to unlock chat
 const FREE_IMAGE_INDICES = [0, 1, 2]; // Profile, Cover, and 1st feed image
 const FREE_VIDEO_INDICES = [0]; // 1st video
 
@@ -263,7 +264,12 @@ function ValentinaApp() {
   const [unlockedVideoIndices, setUnlockedVideoIndices] = useState<number[]>(FREE_VIDEO_INDICES);
   const [timeSpent, setTimeSpent] = useState(0);
   const [unlockedIndices, setUnlockedIndices] = useState<number[]>(FREE_IMAGE_INDICES);
-  const [showUnlockNotification, setShowUnlockNotification] = useState<string | null>(null);
+  const [isChatUnlocked, setIsChatUnlocked] = useState(false);
+  const [showUnlockNotification, setShowUnlockNotification] = useState<{
+    message: string;
+    type: 'image' | 'video' | 'chat';
+    index?: number;
+  } | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -323,7 +329,7 @@ function ValentinaApp() {
         if (item.type === 'image') {
           setUnlockedIndices(prev => {
             if (!prev.includes(item.index)) {
-              triggerUnlockNotification(`¡Nueva foto desbloqueada! ✨`);
+              triggerUnlockNotification(`¡Nueva foto desbloqueada! ✨`, 'image', item.index);
               return [...prev, item.index];
             }
             return prev;
@@ -331,7 +337,7 @@ function ValentinaApp() {
         } else if (item.type === 'video') {
           setUnlockedVideoIndices(prev => {
             if (!prev.includes(item.index)) {
-              triggerUnlockNotification(`¡Nuevo video desbloqueado! 📸`);
+              triggerUnlockNotification(`¡Nuevo video desbloqueado! 📸`, 'video', item.index);
               return [...prev, item.index];
             }
             return prev;
@@ -339,11 +345,36 @@ function ValentinaApp() {
         }
       }
     });
-  }, [timeSpent, allLockable]);
 
-  const triggerUnlockNotification = (message: string) => {
-    setShowUnlockNotification(message);
-    setTimeout(() => setShowUnlockNotification(null), 5000);
+    // Chat unlock logic
+    if (timeSpent >= CHAT_UNLOCK_THRESHOLD && !isChatUnlocked) {
+      setIsChatUnlocked(true);
+      triggerUnlockNotification("¡Chat desbloqueado! Ya puedes hablar conmigo ✨", 'chat');
+    }
+  }, [timeSpent, allLockable, isChatUnlocked]);
+
+  const triggerUnlockNotification = (message: string, type: 'image' | 'video' | 'chat', index?: number) => {
+    setShowUnlockNotification({ message, type, index });
+    setTimeout(() => setShowUnlockNotification(null), 6000);
+  };
+
+  const handleNotificationClick = () => {
+    if (!showUnlockNotification) return;
+
+    if (showUnlockNotification.type === 'chat') {
+      setView('chat');
+    } else if (showUnlockNotification.type === 'image') {
+      setActiveTab('posts');
+      setView('profile');
+      if (showUnlockNotification.index !== undefined) {
+        setSelectedImage(VALENTINA_IMAGES[showUnlockNotification.index]);
+      }
+    } else if (showUnlockNotification.type === 'video') {
+      setActiveTab('media');
+      setView('profile');
+      // Optionally scroll to video
+    }
+    setShowUnlockNotification(null);
   };
 
   useEffect(() => {
@@ -644,11 +675,18 @@ function ValentinaApp() {
           />
           {/* Strategic Chat Button on Cover */}
           <button 
-            onClick={() => setView('chat')}
-            className="absolute bottom-4 right-4 p-3 bg-[var(--accent)] rounded-full shadow-xl hover:scale-110 transition-transform z-20 flex items-center gap-2 px-4"
+            onClick={() => {
+              if (isChatUnlocked) {
+                setView('chat');
+              } else {
+                triggerUnlockNotification(`El chat se desbloquea en ${CHAT_UNLOCK_THRESHOLD - timeSpent}s ✨`, 'chat');
+              }
+            }}
+            className={`absolute bottom-4 right-4 p-3 bg-[var(--accent)] rounded-full shadow-xl hover:scale-110 transition-transform z-20 flex items-center gap-2 px-4 ${!isChatUnlocked ? 'opacity-50' : ''}`}
           >
             <MessageCircle size={20} className="text-white" />
             <span className="text-xs font-bold">Chatear</span>
+            {!isChatUnlocked && <Lock size={12} className="text-white/80" />}
           </button>
         </div>
 
@@ -775,11 +813,18 @@ function ValentinaApp() {
           {/* Action Buttons */}
           <div className="grid grid-cols-5 gap-2 mb-8">
             <button 
-              onClick={() => setView('chat')}
-              className="col-span-4 of-button-primary py-4 text-sm flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(251,113,133,0.3)]"
+              onClick={() => {
+                if (isChatUnlocked) {
+                  setView('chat');
+                } else {
+                  triggerUnlockNotification(`El chat se desbloquea en ${CHAT_UNLOCK_THRESHOLD - timeSpent}s ✨`, 'chat');
+                }
+              }}
+              className={`col-span-4 of-button-primary py-4 text-sm flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(251,113,133,0.3)] ${!isChatUnlocked ? 'opacity-50' : ''}`}
             >
               <MessageCircle size={20} />
               HABLAR CON VALENTINA LOVE69
+              {!isChatUnlocked && <Lock size={16} className="text-white/80" />}
             </button>
             <button 
               onClick={() => setIsSubscribed(!isSubscribed)}
@@ -897,11 +942,16 @@ function ValentinaApp() {
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          setView('chat');
+                          if (isChatUnlocked) {
+                            setView('chat');
+                          } else {
+                            triggerUnlockNotification(`El chat se desbloquea en ${CHAT_UNLOCK_THRESHOLD - timeSpent}s ✨`, 'chat');
+                          }
                         }}
-                        className="absolute bottom-3 right-3 p-3 bg-[var(--accent)] rounded-full shadow-lg hover:scale-110 transition-transform z-20"
+                        className={`absolute bottom-3 right-3 p-3 bg-[var(--accent)] rounded-full shadow-lg hover:scale-110 transition-transform z-20 ${!isChatUnlocked ? 'opacity-50' : ''}`}
                       >
                         <MessageCircle size={20} className="text-white" />
+                        {!isChatUnlocked && <Lock size={10} className="absolute -top-1 -right-1 text-white bg-zinc-800 rounded-full p-0.5" />}
                       </button>
                     </div>
                     <div className="flex items-center gap-6 pt-2">
@@ -1007,9 +1057,19 @@ function ValentinaApp() {
                           <Heart size={20} className={isMain ? 'text-[var(--accent)]' : ''} />
                           <span className="text-xs">{isMain ? '1.2k' : 452 + i * 24}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-zinc-400 cursor-pointer hover:text-[var(--accent)]" onClick={() => setView('chat')}>
+                        <div 
+                          className={`flex items-center gap-1.5 text-zinc-400 cursor-pointer hover:text-[var(--accent)] ${!isChatUnlocked ? 'opacity-50' : ''}`} 
+                          onClick={() => {
+                            if (isChatUnlocked) {
+                              setView('chat');
+                            } else {
+                              triggerUnlockNotification(`El chat se desbloquea en ${CHAT_UNLOCK_THRESHOLD - timeSpent}s ✨`, 'chat');
+                            }
+                          }}
+                        >
                           <MessageCircle size={20} />
                           <span className="text-xs">{isMain ? '245' : 89 + i * 7}</span>
+                          {!isChatUnlocked && <Lock size={10} className="text-zinc-500" />}
                         </div>
                       </div>
                     </div>
@@ -1025,8 +1085,10 @@ function ValentinaApp() {
                     const timeRemaining = Math.max(0, threshold - timeSpent);
 
                     return (
-                      <div 
+                      <motion.div 
                         key={i} 
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         className="galeria-item relative bg-black cursor-pointer"
                         onClick={() => isUnlocked ? setSelectedImage(img) : null}
                       >
@@ -1054,7 +1116,7 @@ function ValentinaApp() {
                             </div>
                           </div>
                         )}
-                      </div>
+                      </motion.div>
                     );
                   })}
                 </div>
@@ -1069,29 +1131,25 @@ function ValentinaApp() {
       <AnimatePresence>
         {showUnlockNotification && (
           <motion.div 
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ 
-              opacity: 1, 
-              y: 0, 
-              transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 20
-              }
-            }}
-            exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-24 left-4 right-4 z-[100] bg-gradient-to-r from-[var(--accent)] to-rose-400 text-white p-4 rounded-2xl shadow-[0_20px_50px_rgba(251,113,133,0.4)] flex items-center gap-4 border border-white/20"
+            initial={{ y: 100, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 100, opacity: 0, scale: 0.9 }}
+            onClick={handleNotificationClick}
+            className="fixed bottom-24 left-4 right-4 z-[100] bg-gradient-to-r from-[var(--accent)] to-rose-500 p-4 rounded-2xl shadow-2xl cursor-pointer group overflow-hidden"
           >
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
-              <Star size={24} className="text-white fill-white" />
+            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex items-center gap-4 relative z-10">
+              <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0 backdrop-blur-md border border-white/30">
+                {showUnlockNotification.type === 'chat' ? <MessageCircle className="text-white" /> : <Unlock className="text-white" />}
+              </div>
+              <div className="flex-1">
+                <p className="text-base font-black uppercase italic tracking-tighter leading-none mb-1">{showUnlockNotification.message}</p>
+                <p className="text-[10px] font-bold text-white/80 uppercase tracking-widest">Toca para ver ahora ✨</p>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                <Star size={14} className="text-white animate-spin-slow" />
+              </div>
             </div>
-            <div className="flex-1">
-              <p className="text-base font-black uppercase italic tracking-tighter leading-none mb-1">{showUnlockNotification}</p>
-              <p className="text-[10px] font-bold opacity-90 uppercase tracking-widest">¡Contenido exclusivo disponible ahora! ✨</p>
-            </div>
-            <button onClick={() => setShowUnlockNotification(null)} className="p-2 bg-black/20 rounded-full hover:bg-black/40 transition-colors">
-              <X size={16} />
-            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -1114,11 +1172,24 @@ function ValentinaApp() {
         >
           <Grid size={24} className="text-white/60" />
         </div>
-        <MessageCircle 
-          size={24} 
-          className={view === 'chat' ? "text-[var(--accent)]" : "text-white/60"} 
-          onClick={() => setView('chat')}
-        />
+        <div className="relative">
+          <MessageCircle 
+            size={24} 
+            className={`${view === 'chat' ? "text-[var(--accent)]" : "text-white/60"} ${!isChatUnlocked ? 'opacity-50' : 'cursor-pointer hover:text-white'}`} 
+            onClick={() => {
+              if (isChatUnlocked) {
+                setView('chat');
+              } else {
+                triggerUnlockNotification(`El chat se desbloquea en ${CHAT_UNLOCK_THRESHOLD - timeSpent}s ✨`, 'chat');
+              }
+            }}
+          />
+          {!isChatUnlocked && (
+            <div className="absolute -top-1 -right-1 bg-zinc-800 rounded-full p-0.5 border border-white/10">
+              <Lock size={8} className="text-white/60" />
+            </div>
+          )}
+        </div>
         <User 
           size={24} 
           className="text-white/60 cursor-pointer hover:text-white transition-colors" 
@@ -1150,11 +1221,13 @@ function ValentinaApp() {
                 const timeRemaining = Math.max(0, threshold - timeSpent);
 
                 return (
-                  <motion.div 
-                    key={i}
-                    className="rounded-xl cursor-pointer bg-white/5 relative group"
-                    onClick={() => setSelectedImage(img)}
-                  >
+                    <motion.div 
+                      key={i}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="rounded-xl cursor-pointer bg-white/5 relative group"
+                      onClick={() => isUnlocked ? setSelectedImage(img) : null}
+                    >
                     <div className="relative">
                       <img 
                         src={img} 
@@ -1181,10 +1254,13 @@ function ValentinaApp() {
             className="fixed inset-0 z-[100] bg-black flex items-center justify-center p-4"
           >
             <div className="relative w-full h-full flex items-center justify-center p-4" onClick={() => setSelectedImage(null)}>
-              <img 
+              <motion.img 
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
                 src={selectedImage} 
                 alt="Full view" 
-                className="max-w-full max-h-full object-contain shadow-2xl"
+                className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
                 referrerPolicy="no-referrer"
               />
               
@@ -1194,9 +1270,13 @@ function ValentinaApp() {
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedImage(null);
-                    setView('chat');
+                    if (isChatUnlocked) {
+                      setView('chat');
+                    } else {
+                      triggerUnlockNotification(`El chat se desbloquea en ${CHAT_UNLOCK_THRESHOLD - timeSpent}s ✨`, 'chat');
+                    }
                   }}
-                  className="of-button-primary flex items-center gap-3 px-8 py-4 shadow-[0_0_30px_rgba(251,113,133,0.5)]"
+                  className={`of-button-primary flex items-center gap-3 px-8 py-4 shadow-[0_0_30px_rgba(251,113,133,0.5)] ${!isChatUnlocked ? 'opacity-50' : ''}`}
                 >
                   <MessageCircle size={24} />
                   <span className="text-lg">Hablar con Valentina love69</span>
@@ -1204,7 +1284,7 @@ function ValentinaApp() {
               </div>
 
               <button className="absolute top-6 right-6 p-2 bg-black/50 rounded-full" onClick={() => setSelectedImage(null)}>
-                <ArrowLeft size={24} className="rotate-90" />
+                <X size={24} className="text-white" />
               </button>
             </div>
           </motion.div>
