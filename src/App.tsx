@@ -981,17 +981,6 @@ function ValentinaApp() {
                   const isMain = i === 0;
                   const isUnlocked = unlockedVideoIndices.includes(i);
                   
-                  // Calculate time remaining for this video
-                  const lockableImages = VALENTINA_IMAGES.map((_, idx) => ({ type: 'image', index: idx })).filter(item => !FREE_IMAGE_INDICES.includes(item.index));
-                  const lockableVideos = VALENTINA_VIDEOS.map((_, idx) => ({ type: 'video', index: idx })).filter(item => !FREE_VIDEO_INDICES.includes(item.index));
-                  
-                  const allLockable: { type: string, index: number }[] = [];
-                  const maxLen = Math.max(lockableImages.length, lockableVideos.length);
-                  for (let j = 0; j < maxLen; j++) {
-                    if (j < lockableImages.length) allLockable.push(lockableImages[j]);
-                    if (j < lockableVideos.length) allLockable.push(lockableVideos[j]);
-                  }
-                  
                   const lockableIndex = allLockable.findIndex(item => item.type === 'video' && item.index === i);
                   const threshold = lockableIndex !== -1 ? (lockableIndex + 1) * UNLOCK_INTERVAL : 0;
                   const timeRemaining = Math.max(0, threshold - timeSpent);
@@ -1024,12 +1013,14 @@ function ValentinaApp() {
                         {/* Blurred background for video container */}
                         <div className="absolute inset-0 bg-gradient-to-b from-zinc-800 to-black opacity-50"></div>
                         <iframe
-                          src={`${videoUrl}?autoplay=0&title=0&byline=0&portrait=0&badge=0&autopause=0&player_id=0&app_id=58479`}
-                          className={`w-full aspect-[9/16] block ${!isUnlocked ? 'blur-2xl opacity-0' : ''}`}
+                          src={`${videoUrl}?autoplay=0&title=0&byline=0&portrait=0&badge=0&autopause=0&player_id=0&app_id=58479&playsinline=1`}
+                          className={`w-full aspect-[9/16] block transition-all duration-700 ${!isUnlocked ? 'blur-2xl opacity-0 scale-110' : 'opacity-100 scale-100'}`}
                           frameBorder="0"
                           allow="autoplay; fullscreen; picture-in-picture"
                           allowFullScreen
-                          sandbox="allow-scripts allow-same-origin allow-presentation"
+                          sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-forms"
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
                         ></iframe>
                         
                         {!isUnlocked && (
