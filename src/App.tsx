@@ -22,6 +22,7 @@ import {
   Play,
   Lock,
   Unlock,
+  Pause,
   Search,
   Menu,
   Bell,
@@ -296,6 +297,7 @@ function ValentinaApp() {
   const [unlockedIndices, setUnlockedIndices] = useState<number[]>(initialState?.unlockedIndices ?? FREE_IMAGE_INDICES);
   const [isChatUnlocked, setIsChatUnlocked] = useState(initialState?.isChatUnlocked ?? false);
   const [postInteractions, setPostInteractions] = useState<Record<string, PostInteraction>>(initialState?.postInteractions ?? {});
+  const [isPaused, setIsPaused] = useState(false);
   const [showUnlockNotification, setShowUnlockNotification] = useState<{
     message: string;
     type: 'image' | 'video' | 'chat';
@@ -386,12 +388,23 @@ function ValentinaApp() {
     };
   }, []);
 
-  // Timer for retention
+  // Timer for retention with Page Visibility API
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsPaused(document.hidden);
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
     const timer = setInterval(() => {
-      setTimeSpent(prev => prev + 1);
+      if (!document.hidden) {
+        setTimeSpent(prev => prev + 1);
+      }
     }, 1000);
-    return () => clearInterval(timer);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(timer);
+    };
   }, []);
 
   // Post descriptions for variety
@@ -953,11 +966,13 @@ function ValentinaApp() {
                 <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center gap-2">
                     <div className="p-1 bg-cyan-500/20 rounded-md">
-                      <Unlock size={12} className="text-cyan-400" />
+                      {isPaused ? <Pause size={12} className="text-rose-400 animate-pulse" /> : <Unlock size={12} className="text-cyan-400" />}
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Próximo contenido: disponible en unos segundos</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">
+                      {isPaused ? 'Contador pausado: vuelve para continuar' : 'Próximo contenido: disponible en unos segundos'}
+                    </span>
                   </div>
-                  <span className="text-[10px] text-[var(--accent)] font-mono bg-[var(--accent)]/10 px-2 py-0.5 rounded-full">
+                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${isPaused ? 'bg-rose-500/20 text-rose-400' : 'bg-[var(--accent)]/10 text-[var(--accent)]'}`}>
                     {Math.max(0, Math.floor(((unlockedIndices.length + unlockedVideoIndices.length - FREE_IMAGE_INDICES.length - FREE_VIDEO_INDICES.length + 1) * UNLOCK_INTERVAL) - timeSpent))}s
                   </span>
                 </div>
@@ -1080,8 +1095,14 @@ function ValentinaApp() {
                             Contenido Exclusivo
                           </p>
                           <p className="text-[10px] text-zinc-400 font-medium">
-                            Se desbloquea automáticamente en {timeRemaining}s
+                            {isPaused ? 'Contador pausado' : `Se desbloquea automáticamente en ${timeRemaining}s`}
                           </p>
+                          <div className="w-24 h-1 bg-white/10 rounded-full overflow-hidden mt-2">
+                            <div 
+                              className={`h-full ${isPaused ? 'bg-rose-500/40' : 'bg-gradient-to-r from-[var(--accent)] to-rose-400'}`}
+                              style={{ width: `${(timeSpent % UNLOCK_INTERVAL / UNLOCK_INTERVAL) * 100}%` }}
+                            />
+                          </div>
                         </div>
                       )}
                       
@@ -1200,11 +1221,11 @@ function ValentinaApp() {
                               Video Bloqueado
                             </p>
                             <p className="text-xs text-zinc-400 font-medium mb-4">
-                              Desbloqueo automático en {timeRemaining}s
+                              {isPaused ? 'Contador pausado' : `Desbloqueo automático en ${timeRemaining}s`}
                             </p>
                             <div className="w-32 h-1.5 bg-white/10 rounded-full overflow-hidden">
                               <div 
-                                className="h-full bg-[var(--accent)] transition-all duration-1000"
+                                className={`h-full ${isPaused ? 'bg-rose-500/40' : 'bg-gradient-to-r from-[var(--accent)] to-rose-400'} transition-all duration-1000`}
                                 style={{ width: `${(timeSpent % UNLOCK_INTERVAL / UNLOCK_INTERVAL) * 100}%` }}
                               />
                             </div>
@@ -1281,11 +1302,11 @@ function ValentinaApp() {
                               <Lock size={24} className="text-white/80" />
                             </div>
                             <p className="text-[10px] font-black text-white uppercase tracking-widest">
-                              Desbloquea en {timeRemaining}s
+                              {isPaused ? 'Contador pausado' : `Desbloquea en ${timeRemaining}s`}
                             </p>
                             <div className="mt-2 w-16 h-1 bg-white/10 rounded-full overflow-hidden">
                               <div 
-                                className="h-full bg-[var(--accent)] transition-all duration-1000"
+                                className={`h-full ${isPaused ? 'bg-rose-500/40' : 'bg-gradient-to-r from-[var(--accent)] to-rose-400'} transition-all duration-1000`}
                                 style={{ width: `${(timeSpent % UNLOCK_INTERVAL / UNLOCK_INTERVAL) * 100}%` }}
                               />
                             </div>
