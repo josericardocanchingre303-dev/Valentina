@@ -255,7 +255,14 @@ export default function App() {
   );
 }
 
-const STORAGE_KEY = 'valentina_love69_v1';
+interface PostInteraction {
+  likes: number;
+  loves: number;
+  userLiked: boolean;
+  userLoved: boolean;
+}
+
+const STORAGE_KEY = 'valentina_love69_v2';
 
 function ValentinaApp() {
   // Load initial state from localStorage
@@ -266,7 +273,7 @@ function ValentinaApp() {
         const parsed = JSON.parse(saved);
         return {
           ...parsed,
-          messages: parsed.messages.map((m: any) => ({
+          messages: (parsed.messages || []).map((m: any) => ({
             ...m,
             timestamp: new Date(m.timestamp)
           }))
@@ -295,6 +302,7 @@ function ValentinaApp() {
   const [timeSpent, setTimeSpent] = useState(initialState?.timeSpent ?? 0);
   const [unlockedIndices, setUnlockedIndices] = useState<number[]>(initialState?.unlockedIndices ?? FREE_IMAGE_INDICES);
   const [isChatUnlocked, setIsChatUnlocked] = useState(initialState?.isChatUnlocked ?? false);
+  const [postInteractions, setPostInteractions] = useState<Record<string, PostInteraction>>(initialState?.postInteractions ?? {});
   const [showUnlockNotification, setShowUnlockNotification] = useState<{
     message: string;
     type: 'image' | 'video' | 'chat';
@@ -312,10 +320,66 @@ function ValentinaApp() {
       unlockedVideoIndices,
       timeSpent,
       unlockedIndices,
-      isChatUnlocked
+      isChatUnlocked,
+      postInteractions
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
-  }, [isSubscribed, isLiked, messages, unlockedVideoIndices, timeSpent, unlockedIndices, isChatUnlocked]);
+  }, [isSubscribed, isLiked, messages, unlockedVideoIndices, timeSpent, unlockedIndices, isChatUnlocked, postInteractions]);
+
+  // Interaction handlers
+  const handleLike = (postId: string, initialLikes: number) => {
+    setPostInteractions(prev => {
+      const current = prev[postId] || { likes: initialLikes, loves: 0, userLiked: false, userLoved: false };
+      const newUserLiked = !current.userLiked;
+      return {
+        ...prev,
+        [postId]: {
+          ...current,
+          userLiked: newUserLiked,
+          likes: newUserLiked ? current.likes + 1 : current.likes - 1
+        }
+      };
+    });
+  };
+
+  const handleLove = (postId: string, initialLoves: number) => {
+    setPostInteractions(prev => {
+      const current = prev[postId] || { likes: 0, loves: initialLoves, userLiked: false, userLoved: false };
+      const newUserLoved = !current.userLoved;
+      return {
+        ...prev,
+        [postId]: {
+          ...current,
+          userLoved: newUserLoved,
+          loves: newUserLoved ? current.loves + 1 : current.loves - 1
+        }
+      };
+    });
+  };
+
+  const handleShare = async (postId: string) => {
+    const shareUrl = `${window.location.origin}${window.location.pathname}?post=${postId}`;
+    const shareData = {
+      title: 'Valentina love69',
+      text: '¡Mira este contenido exclusivo de Valentina love69! ✨',
+      url: shareUrl
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log('Error sharing:', err);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        triggerUnlockNotification('¡Enlace copiado al portapapeles! ✨', 'chat');
+      } catch (err) {
+        console.error('Failed to copy: ', err);
+      }
+    }
+  };
 
   // Protection logic
   useEffect(() => {
@@ -697,15 +761,9 @@ function ValentinaApp() {
       {/* Top Nav */}
       <nav className="glass sticky top-0 z-20 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <ArrowLeft 
-            size={24} 
-            className="text-white/70 cursor-pointer hover:text-white transition-colors" 
-            onClick={() => setView('profile')}
-          />
           <Logo />
         </div>
         <div className="flex items-center gap-5">
-          <Search size={22} className="text-white/70 cursor-pointer hover:text-white transition-colors" />
           <MoreVertical size={22} className="text-white/70 cursor-pointer hover:text-white transition-colors" />
         </div>
       </nav>
@@ -1001,15 +1059,42 @@ function ValentinaApp() {
                         {!isChatUnlocked && <Lock size={10} className="absolute -top-1 -right-1 text-white bg-zinc-800 rounded-full p-0.5" />}
                       </button>
                     </div>
-                    <div className="flex items-center gap-6 pt-2">
-                      <div className="flex items-center gap-1.5 text-zinc-400">
-                        <Heart size={20} />
-                        <span className="text-xs">{124 + i * 42}</span>
+                    
+                    {/* Post Interactions */}
+                    <div className="flex items-center justify-between pt-2">
+                      <div className="flex items-center gap-6">
+                        {/* Like Button */}
+                        <button 
+                          onClick={() => handleLike(`image_${actualIndex}`, 124 + i * 42)}
+                          className={`flex items-center gap-1.5 transition-colors ${postInteractions[`image_${actualIndex}`]?.userLiked ? 'text-[var(--accent)]' : 'text-zinc-400 hover:text-white'}`}
+                        >
+                          <Heart size={20} fill={postInteractions[`image_${actualIndex}`]?.userLiked ? "currentColor" : "none"} />
+                          <span className="text-xs font-bold">{postInteractions[`image_${actualIndex}`]?.likes ?? (124 + i * 42)}</span>
+                        </button>
+
+                        {/* Love Button */}
+                        <button 
+                          onClick={() => handleLove(`image_${actualIndex}`, 45 + i * 12)}
+                          className={`flex items-center gap-1.5 transition-colors ${postInteractions[`image_${actualIndex}`]?.userLoved ? 'text-orange-500' : 'text-zinc-400 hover:text-white'}`}
+                        >
+                          <Star size={20} fill={postInteractions[`image_${actualIndex}`]?.userLoved ? "currentColor" : "none"} />
+                          <span className="text-xs font-bold">{postInteractions[`image_${actualIndex}`]?.loves ?? (45 + i * 12)}</span>
+                        </button>
+
+                        {/* Chat Link */}
+                        <div className="flex items-center gap-1.5 text-zinc-400 cursor-pointer hover:text-white" onClick={() => setView('chat')}>
+                          <MessageCircle size={20} />
+                          <span className="text-xs font-bold">{42 + i * 5}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5 text-zinc-400 cursor-pointer hover:text-[var(--accent)]" onClick={() => setView('chat')}>
-                        <MessageCircle size={20} />
-                        <span className="text-xs">{42 + i * 5}</span>
-                      </div>
+
+                      {/* Share Button */}
+                      <button 
+                        onClick={() => handleShare(`image_${actualIndex}`)}
+                        className="p-2 text-zinc-400 hover:text-white transition-colors"
+                      >
+                        <Send size={20} />
+                      </button>
                     </div>
                   </div>
                 );
@@ -1090,25 +1175,41 @@ function ValentinaApp() {
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-6 pt-2">
-                        <div className="flex items-center gap-1.5 text-zinc-400">
-                          <Heart size={20} className={isMain ? 'text-[var(--accent)]' : ''} />
-                          <span className="text-xs">{isMain ? '1.2k' : 452 + i * 24}</span>
+                      {/* Video Interactions */}
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="flex items-center gap-6">
+                          {/* Like Button */}
+                          <button 
+                            onClick={() => handleLike(`video_${i}`, isMain ? 1200 : 452 + i * 24)}
+                            className={`flex items-center gap-1.5 transition-colors ${postInteractions[`video_${i}`]?.userLiked ? 'text-[var(--accent)]' : 'text-zinc-400 hover:text-white'}`}
+                          >
+                            <Heart size={20} fill={postInteractions[`video_${i}`]?.userLiked ? "currentColor" : "none"} />
+                            <span className="text-xs font-bold">{postInteractions[`video_${i}`]?.likes ?? (isMain ? 1200 : 452 + i * 24)}</span>
+                          </button>
+
+                          {/* Love Button */}
+                          <button 
+                            onClick={() => handleLove(`video_${i}`, 89 + i * 7)}
+                            className={`flex items-center gap-1.5 transition-colors ${postInteractions[`video_${i}`]?.userLoved ? 'text-orange-500' : 'text-zinc-400 hover:text-white'}`}
+                          >
+                            <Star size={20} fill={postInteractions[`video_${i}`]?.userLoved ? "currentColor" : "none"} />
+                            <span className="text-xs font-bold">{postInteractions[`video_${i}`]?.loves ?? (89 + i * 7)}</span>
+                          </button>
+
+                          {/* Chat Link */}
+                          <div className="flex items-center gap-1.5 text-zinc-400 cursor-pointer hover:text-white" onClick={() => setView('chat')}>
+                            <MessageCircle size={20} />
+                            <span className="text-xs font-bold">{isMain ? '245' : 89 + i * 7}</span>
+                          </div>
                         </div>
-                        <div 
-                          className={`flex items-center gap-1.5 text-zinc-400 cursor-pointer hover:text-[var(--accent)] ${!isChatUnlocked ? 'opacity-50' : ''}`} 
-                          onClick={() => {
-                            if (isChatUnlocked) {
-                              setView('chat');
-                            } else {
-                              triggerUnlockNotification(`El chat se desbloquea en ${CHAT_UNLOCK_THRESHOLD - timeSpent}s ✨`, 'chat');
-                            }
-                          }}
+
+                        {/* Share Button */}
+                        <button 
+                          onClick={() => handleShare(`video_${i}`)}
+                          className="p-2 text-zinc-400 hover:text-white transition-colors"
                         >
-                          <MessageCircle size={20} />
-                          <span className="text-xs">{isMain ? '245' : 89 + i * 7}</span>
-                          {!isChatUnlocked && <Lock size={10} className="text-zinc-500" />}
-                        </div>
+                          <Send size={20} />
+                        </button>
                       </div>
                     </div>
                   );
