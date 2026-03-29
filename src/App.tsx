@@ -103,7 +103,7 @@ IMPORTANTE: Escribe siempre en español neutro natural. No uses negritas ni form
 `;
 
 const VALENTINA_IMAGES = [
-  "https://i.ibb.co/CsmchKZd/ssstik-io-1774595967871-2.jpg",
+  "https://i.ibb.co/9HG88v0T/1774748871859.jpg",
   "https://i.ibb.co/4ZFPV3vV/image.jpg",
   "https://i.ibb.co/HLYJbHBz/ssstik-io-1774597487856-1.jpg",
   "https://i.ibb.co/Xk5khJS8/ssstik-io-1774597845473-1.jpg",
