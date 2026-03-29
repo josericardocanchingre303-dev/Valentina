@@ -104,31 +104,23 @@ IMPORTANTE: Escribe siempre en español neutro natural. No uses negritas ni form
 
 const VALENTINA_IMAGES = [
   "https://i.ibb.co/CsmchKZd/ssstik-io-1774595967871-2.jpg",
-  "https://i.ibb.co/4ZFPV3vV/image.jpg",
+  "https://i.ibb.co/N6Q0xmqt/1774749558480.png",
   "https://i.ibb.co/HLYJbHBz/ssstik-io-1774597487856-1.jpg",
   "https://i.ibb.co/Xk5khJS8/ssstik-io-1774597845473-1.jpg",
-  "https://i.ibb.co/S76fgkZ6/ssstik-io-1774598298294-1.jpg",
   "https://i.ibb.co/fGFc89Zm/ssstik-io-1774597487856-1.jpg",
   "https://i.ibb.co/Txp6VG92/ssstik-io-1774597845473-1.jpg",
-  "https://i.ibb.co/pBhYMJ4t/ssstik-io-1774598298294-1.jpg",
   "https://i.ibb.co/wZjLjFfF/ssstik-io-1774598659630-1.jpg",
   "https://i.ibb.co/mrCR9fS3/ssstik-io-1774599031865-1.jpg",
-  "https://i.ibb.co/PvJPjR0q/ssstik-io-1774599403746-1.jpg",
-  "https://i.ibb.co/chVXnD2D/ssstik-io-1774599773474-1.jpg",
   "https://i.ibb.co/PGcKpJh6/ssstik-io-1774600152920-1.jpg",
-  "https://i.ibb.co/zWDCZvfZ/ssstik-io-1774600545511-1.jpg",
   "https://i.ibb.co/TDcP91Lv/ssstik-io-1774600924712-1.jpg",
   "https://i.ibb.co/4Zrpg1V7/ssstik-io-1774601302655-1.jpg",
   "https://i.ibb.co/tPzZX0hP/ssstik-io-1774601683474-1.jpg",
   "https://i.ibb.co/5gNs3Wff/ssstik-io-1774602064817-1.jpg",
   "https://i.ibb.co/r2Fh1fTg/ssstik-io-1774602456647-1.jpg",
   "https://i.ibb.co/ZRcNVkSJ/ssstik-io-1774602836438-1.jpg",
-  "https://i.ibb.co/fdF2mnfx/ssstik-io-1774603224611-1.jpg",
-  "https://i.ibb.co/Ldzqhbgp/ssstik-io-1774603605897-1.jpg",
   "https://i.ibb.co/h1mMxMTH/ssstik-io-1774603988683-1.jpg",
   "https://i.ibb.co/LDpghXRV/ssstik-io-1774604375079-1.jpg",
   "https://i.ibb.co/mrkrzmCD/ssstik-io-1774604766108-1.jpg",
-  "https://i.ibb.co/FqHMH4Yj/ssstik-io-1774605162851-1.jpg",
   "https://i.ibb.co/gbtCMrGf/ssstik-io-1774605548265-1.jpg",
   "https://i.ibb.co/23M6JtRK/ssstik-io-1774605936925-1.jpg",
   "https://i.ibb.co/nM2BGTLq/ssstik-io-1774606327281-1.jpg"
@@ -136,6 +128,7 @@ const VALENTINA_IMAGES = [
 
 const VALENTINA_VIDEOS = [
   "https://player.vimeo.com/video/1177493707", // Principal
+  "https://player.vimeo.com/video/1178087553", // Nuevo video especial
   "https://player.vimeo.com/video/1177499992",
   "https://player.vimeo.com/video/1177496649",
   "https://player.vimeo.com/video/1177486626",
@@ -414,6 +407,20 @@ function ValentinaApp() {
     "Día de producción intenso pero muy divertido. 🎬",
     "Gracias por todo el apoyo, son los mejores. ❤️"
   ];
+
+  // Memoized combined feed for the main tab
+  const combinedFeed = useMemo(() => {
+    const feed: { type: 'image' | 'video', url: string, index: number }[] = [];
+    const images = VALENTINA_IMAGES.slice(2).map((url, i) => ({ type: 'image' as const, url, index: i + 2 }));
+    const videos = VALENTINA_VIDEOS.map((url, i) => ({ type: 'video' as const, url, index: i }));
+    
+    const maxLen = Math.max(images.length, videos.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (i < images.length) feed.push(images[i]);
+      if (i < videos.length) feed.push(videos[i]);
+    }
+    return feed;
+  }, []);
 
   // Memoized lockable items to ensure consistency
   const allLockable = useMemo(() => {
@@ -799,16 +806,16 @@ function ValentinaApp() {
         <div className="px-4 -mt-12 relative z-10">
           <div className="flex justify-between items-end mb-4">
             <div className="relative">
-              <div className="w-24 h-24 rounded-2xl border-4 border-black bg-zinc-900 relative overflow-visible">
+              <div className="w-32 h-32 rounded-2xl border-4 border-black bg-zinc-900 relative overflow-hidden shadow-2xl -mt-16">
                 <img 
                   src={VALENTINA_IMAGES[0]} 
                   alt="Profile" 
-                  className="w-full h-full object-contain block rounded-2xl"
+                  className="w-full h-full object-cover object-top block"
                   referrerPolicy="no-referrer"
                 />
               </div>
               {/* Online indicator */}
-              <div className="absolute bottom-1 right-1 w-5 h-5 bg-green-500 border-4 border-black rounded-full shadow-lg"></div>
+              <div className="absolute bottom-1 right-1 w-6 h-6 bg-green-500 border-4 border-black rounded-full shadow-lg z-10"></div>
             </div>
             <div className="flex gap-2 pb-2">
               <button 
@@ -996,38 +1003,73 @@ function ValentinaApp() {
           {/* Feed Content */}
           <div className="space-y-4 pb-20">
             {activeTab === 'posts' ? (
-              VALENTINA_IMAGES.slice(2).map((img, i) => {
-                const actualIndex = i + 2;
-                const isUnlocked = unlockedIndices.includes(actualIndex);
-                const lockableIndex = allLockable.findIndex(item => item.type === 'image' && item.index === actualIndex);
+              combinedFeed.map((item, i) => {
+                const isUnlocked = item.type === 'image' 
+                  ? unlockedIndices.includes(item.index)
+                  : unlockedVideoIndices.includes(item.index);
+                
+                const lockableIndex = allLockable.findIndex(l => l.type === item.type && l.index === item.index);
                 const threshold = lockableIndex !== -1 ? (lockableIndex + 1) * UNLOCK_INTERVAL : 0;
                 const timeRemaining = Math.max(0, threshold - timeSpent);
+                const postId = `${item.type}_${item.index}`;
                 
                 return (
-                  <div key={i} className="of-card p-4 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <div className="w-10 h-10 rounded-full">
-                          <img src={VALENTINA_IMAGES[0]} alt="Avatar" className="w-full h-full object-contain rounded-full" />
+                  <div key={i} className={`of-card p-4 space-y-3 ${item.type === 'video' && item.index === 0 ? 'border-[var(--accent)]/30 bg-[var(--accent)]/5' : ''}`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <div className="w-10 h-10 rounded-full">
+                            <img src={VALENTINA_IMAGES[0]} alt="Avatar" className="w-full h-full object-contain rounded-full" />
+                          </div>
+                          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>
                         </div>
-                        {/* Small online indicator */}
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>
+                        <div>
+                          <p className="font-bold text-sm">Valentina</p>
+                          <p className="text-[10px] text-zinc-500">hace {i + 1} {i === 0 ? 'hora' : 'horas'}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-bold text-sm">Valentina</p>
-                        <p className="text-[10px] text-zinc-500">hace {i + 2} horas</p>
-                      </div>
+                      {item.type === 'video' && item.index === 0 && (
+                        <span className="bg-[var(--accent)] text-white text-[10px] font-black px-2 py-1 rounded-md animate-pulse">
+                          PRINCIPAL
+                        </span>
+                      )}
                     </div>
+
                     <p className="text-sm text-zinc-300">
-                      {POST_DESCRIPTIONS[i % POST_DESCRIPTIONS.length]}
+                      {item.type === 'video' 
+                        ? [
+                            "¡Este es mi nuevo video favorito! Lo he puesto como principal para que no se lo pierdan ✨",
+                            "Les dejo este videito exclusivo por aquí... espero que les guste 📸",
+                            "Nueva sesión: detrás de cámaras ✨",
+                            "Este es de mis favoritos, me sentí súper cómoda grabándolo ✨"
+                          ][item.index % 4]
+                        : POST_DESCRIPTIONS[i % POST_DESCRIPTIONS.length]
+                      }
                     </p>
-                    <div className="relative bg-black group cursor-pointer overflow-visible" onClick={() => isUnlocked ? setSelectedImage(img) : null}>
-                      <img 
-                        src={img} 
-                        alt="Post" 
-                        className={`relative w-full h-auto transition-all duration-700 block ${!isUnlocked ? 'blur-2xl opacity-40 scale-105' : 'group-hover:scale-105'}`}
-                        referrerPolicy="no-referrer"
-                      />
+
+                    <div className="relative bg-black group cursor-pointer overflow-visible" onClick={() => (isUnlocked && item.type === 'image') ? setSelectedImage(item.url) : null}>
+                      {item.type === 'image' ? (
+                        <img 
+                          src={item.url} 
+                          alt="Post" 
+                          className={`relative w-full h-auto transition-all duration-700 block ${!isUnlocked ? 'blur-2xl opacity-40 scale-105' : 'group-hover:scale-105'}`}
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className={`relative w-full max-w-[380px] mx-auto bg-black shadow-2xl ${item.index === 0 ? 'ring-2 ring-[var(--accent)]/50' : ''}`}>
+                          <div className="absolute inset-0 bg-gradient-to-b from-zinc-800 to-black opacity-50"></div>
+                          <iframe
+                            src={`${item.url}?autoplay=0&title=0&byline=0&portrait=0&badge=0&autopause=0&player_id=0&app_id=58479&playsinline=1`}
+                            className={`w-full aspect-[9/16] block transition-all duration-700 ${!isUnlocked ? 'blur-2xl opacity-0 scale-110' : 'opacity-100 scale-100'}`}
+                            frameBorder="0"
+                            allow="autoplay; fullscreen; picture-in-picture"
+                            allowFullScreen
+                            sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-forms"
+                            loading="lazy"
+                            referrerPolicy="no-referrer"
+                          ></iframe>
+                        </div>
+                      )}
                       
                       {!isUnlocked && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 z-10">
@@ -1043,7 +1085,6 @@ function ValentinaApp() {
                         </div>
                       )}
                       
-                      {/* Strategic Chat Button on Image */}
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
@@ -1060,37 +1101,32 @@ function ValentinaApp() {
                       </button>
                     </div>
                     
-                    {/* Post Interactions */}
                     <div className="flex items-center justify-between pt-2">
                       <div className="flex items-center gap-6">
-                        {/* Like Button */}
                         <button 
-                          onClick={() => handleLike(`image_${actualIndex}`, 124 + i * 42)}
-                          className={`flex items-center gap-1.5 transition-colors ${postInteractions[`image_${actualIndex}`]?.userLiked ? 'text-[var(--accent)]' : 'text-zinc-400 hover:text-white'}`}
+                          onClick={() => handleLike(postId, 124 + i * 42)}
+                          className={`flex items-center gap-1.5 transition-colors ${postInteractions[postId]?.userLiked ? 'text-[var(--accent)]' : 'text-zinc-400 hover:text-white'}`}
                         >
-                          <Heart size={20} fill={postInteractions[`image_${actualIndex}`]?.userLiked ? "currentColor" : "none"} />
-                          <span className="text-xs font-bold">{postInteractions[`image_${actualIndex}`]?.likes ?? (124 + i * 42)}</span>
+                          <Heart size={20} fill={postInteractions[postId]?.userLiked ? "currentColor" : "none"} />
+                          <span className="text-xs font-bold">{postInteractions[postId]?.likes ?? (124 + i * 42)}</span>
                         </button>
 
-                        {/* Love Button */}
                         <button 
-                          onClick={() => handleLove(`image_${actualIndex}`, 45 + i * 12)}
-                          className={`flex items-center gap-1.5 transition-colors ${postInteractions[`image_${actualIndex}`]?.userLoved ? 'text-orange-500' : 'text-zinc-400 hover:text-white'}`}
+                          onClick={() => handleLove(postId, 45 + i * 12)}
+                          className={`flex items-center gap-1.5 transition-colors ${postInteractions[postId]?.userLoved ? 'text-orange-500' : 'text-zinc-400 hover:text-white'}`}
                         >
-                          <Star size={20} fill={postInteractions[`image_${actualIndex}`]?.userLoved ? "currentColor" : "none"} />
-                          <span className="text-xs font-bold">{postInteractions[`image_${actualIndex}`]?.loves ?? (45 + i * 12)}</span>
+                          <Star size={20} fill={postInteractions[postId]?.userLoved ? "currentColor" : "none"} />
+                          <span className="text-xs font-bold">{postInteractions[postId]?.loves ?? (45 + i * 12)}</span>
                         </button>
 
-                        {/* Chat Link */}
                         <div className="flex items-center gap-1.5 text-zinc-400 cursor-pointer hover:text-white" onClick={() => setView('chat')}>
                           <MessageCircle size={20} />
                           <span className="text-xs font-bold">{42 + i * 5}</span>
                         </div>
                       </div>
 
-                      {/* Share Button */}
                       <button 
-                        onClick={() => handleShare(`image_${actualIndex}`)}
+                        onClick={() => handleShare(postId)}
                         className="p-2 text-zinc-400 hover:text-white transition-colors"
                       >
                         <Send size={20} />
@@ -1101,7 +1137,7 @@ function ValentinaApp() {
               })
             ) : (
               <div className="space-y-4">
-                {/* Video Post */}
+                {/* Media Tab - Only Videos for quick access */}
                 {VALENTINA_VIDEOS.map((videoUrl, i) => {
                   const descriptions = [
                     "¡Este es mi nuevo video favorito! Lo he puesto como principal para que no se lo pierdan ✨",
