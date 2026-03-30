@@ -308,6 +308,22 @@ function ValentinaApp() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Adsterra Script Integration
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://pl29015306.profitablecpmratenetwork.com/9b/b7/b8/9bb7b8d937e2f23b67cc4bcb90ea3a37.js';
+    script.async = true;
+    script.type = 'text/javascript';
+    document.body.appendChild(script);
+
+    return () => {
+      // Cleanup script if component unmounts
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
+
   // Persistence logic
   useEffect(() => {
     const stateToSave = {

@@ -1,0 +1,3 @@
+# ads.txt para Adsterra
+# Reemplaza con tus datos reales proporcionados por Adsterra
+pro.profitablecpmratenetwork.com, [TU_ID_DE_EDITOR], DIRECT, [TU_HASH_DE_AUTORIZACION]
