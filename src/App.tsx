@@ -34,9 +34,14 @@ import {
 } from "lucide-react";
 
 // Initialize Gemini
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const apiKey = process.env.GEMINI_API_KEY;
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 const sendMessageToGemini = async (message: string, chatHistory: Message[]) => {
+  if (!ai) {
+    console.error('Gemini API key is missing. Please check your environment variables.');
+    return 'Lo siento, el chat no está disponible en este momento. Por favor contacta al administrador.';
+  }
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
