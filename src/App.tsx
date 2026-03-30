@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useRef, useMemo, ReactNode, Component } from 'react';
 import { motion, AnimatePresence } from "motion/react";
+import { GoogleGenAI } from "@google/genai";
 import { 
   Send, 
   MoreVertical, 
@@ -33,32 +34,27 @@ import {
 } from "lucide-react";
 
 // Initialize Gemini
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
 const sendMessageToGemini = async (message: string, chatHistory: Message[]) => {
   try {
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        message, 
-        history: [
-          { role: 'model', content: VALENTINA_SYSTEM_INSTRUCTION },
-          ...chatHistory.map(msg => ({
-            role: msg.role === 'user' ? 'user' : 'model',
-            content: msg.text
-          }))
-        ]
-      }),
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [
+        ...chatHistory.map(msg => ({
+          role: msg.role === 'user' ? 'user' : 'model',
+          parts: [{ text: msg.text }]
+        })),
+        { role: 'user', parts: [{ text: message }] }
+      ],
+      config: {
+        systemInstruction: VALENTINA_SYSTEM_INSTRUCTION,
+        temperature: 0.7,
+        maxOutputTokens: 1000,
+      }
     });
     
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || 'Error en la solicitud');
-    }
-    
-    return data.message;
+    return response.text || "";
   } catch (error) {
     console.error('Error llamando a Gemini:', error);
     return 'Lo siento, hubo un error. Por favor intenta de nuevo.';
@@ -143,17 +139,8 @@ const FREE_VIDEO_INDICES = [0]; // 1st video
 
 const Logo = ({ className = "" }: { className?: string }) => (
   <div className={`flex items-center gap-2 ${className}`}>
-    <div className="w-10 h-10 rounded-xl shadow-lg shadow-rose-500/20 border border-white/10 relative overflow-visible">
-      <img 
-        src="https://i.ibb.co/Kcrp5NxV/logo.png" 
-        alt="Logo" 
-        className="w-full h-full object-contain"
-        referrerPolicy="no-referrer"
-        onError={(e) => {
-          // Fallback if the direct link guess fails
-          (e.target as HTMLImageElement).src = "https://i.ibb.co/bjjDLPxV/image.jpg";
-        }}
-      />
+    <div className="w-10 h-10 rounded-xl shadow-lg shadow-rose-500/20 border border-white/10 relative overflow-hidden bg-zinc-900 flex items-center justify-center">
+      <Star size={20} className="text-[#fb7185]" fill="currentColor" />
     </div>
     <div className="flex flex-col leading-none">
       <span className="text-sm font-black tracking-tighter uppercase italic">Valentina</span>
@@ -163,11 +150,16 @@ const Logo = ({ className = "" }: { className?: string }) => (
 );
 
 const PrivacyPolicy = ({ onBack, setView }: { onBack: () => void, setView: (v: any) => void }) => {
+  const [confirmReset, setConfirmReset] = useState(false);
+  
   const handleReset = () => {
-    if (window.confirm("¿Estás seguro de que quieres reiniciar tu progreso? Esto borrará tus mensajes y desbloqueos.")) {
-      localStorage.removeItem('valentina_love69_v1');
-      window.location.reload();
+    if (!confirmReset) {
+      setConfirmReset(true);
+      setTimeout(() => setConfirmReset(false), 3000);
+      return;
     }
+    localStorage.removeItem('valentina_love69_v1');
+    window.location.reload();
   };
 
   return (
@@ -217,10 +209,15 @@ const PrivacyPolicy = ({ onBack, setView }: { onBack: () => void, setView: (v: a
             <p className="text-zinc-400 text-xs mb-4">Si experimentas algún problema con la carga de contenido o quieres empezar de cero, puedes reiniciar la aplicación aquí.</p>
             <button 
               onClick={handleReset}
-              className="w-full py-4 rounded-xl border border-rose-500/30 bg-rose-500/5 text-rose-500 font-bold uppercase tracking-widest text-xs hover:bg-rose-500 hover:text-white transition-all"
+              className={`w-full py-4 rounded-xl border font-bold uppercase tracking-widest text-xs transition-all ${
+                confirmReset 
+                  ? 'bg-rose-500 border-rose-500 text-white animate-pulse' 
+                  : 'border-rose-500/30 bg-rose-500/5 text-rose-500 hover:bg-rose-500/10'
+              }`}
             >
-              Reiniciar Experiencia y Progreso
+              {confirmReset ? '¿ESTÁS SEGURO? TOCA OTRA VEZ' : 'Reiniciar Experiencia y Progreso'}
             </button>
+            {confirmReset && <p className="text-[10px] text-zinc-500 mt-2 text-center">Se borrarán todos tus mensajes y contenido desbloqueado.</p>}
           </section>
         </div>
       </div>
@@ -621,7 +618,11 @@ function ValentinaApp() {
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-green-500">Live</span>
             </div>
-            <MoreVertical size={20} className="text-white/70 cursor-pointer hover:text-white transition-colors" />
+            <MoreVertical 
+              size={20} 
+              className="text-white/70 cursor-pointer hover:text-white transition-colors" 
+              onClick={() => setView('privacy')}
+            />
           </div>
         </header>
 
@@ -784,7 +785,11 @@ function ValentinaApp() {
           <Logo />
         </div>
         <div className="flex items-center gap-5">
-          <MoreVertical size={22} className="text-white/70 cursor-pointer hover:text-white transition-colors" />
+          <MoreVertical 
+            size={22} 
+            className="text-white/70 cursor-pointer hover:text-white transition-colors" 
+            onClick={() => setView('privacy')}
+          />
         </div>
       </nav>
 
@@ -841,7 +846,7 @@ function ValentinaApp() {
                     });
                   } else {
                     navigator.clipboard.writeText(window.location.href);
-                    alert('¡Enlace copiado al portapapeles! ✨');
+                    triggerUnlockNotification('¡Enlace copiado al portapapeles! ✨', 'chat');
                   }
                 }}
                 className="p-2 rounded-full border border-white/20 hover:bg-white/5"
@@ -855,7 +860,7 @@ function ValentinaApp() {
                 <Heart size={20} className={isLiked ? 'fill-[var(--accent)]' : ''} />
               </button>
               <button 
-                onClick={() => alert("¡Valentina love69 es la mejor! ✨")}
+                onClick={() => triggerUnlockNotification("¡Valentina love69 es la mejor! ✨", 'chat')}
                 className="p-2 rounded-full border border-white/20 hover:bg-white/5"
               >
                 <Bell size={20} />
@@ -1360,7 +1365,7 @@ function ValentinaApp() {
         <Bell 
           size={24} 
           className="text-white/60 cursor-pointer hover:text-white transition-colors" 
-          onClick={() => alert("¡Próximamente! ✨")}
+          onClick={() => triggerUnlockNotification("¡No hay notificaciones nuevas! ✨", 'chat')}
         />
         <div 
           className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors"
